@@ -2,9 +2,21 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<base href="/rbb-scores/">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>RBB Scores</title>
-
+<script>
+(function () {
+  const base = "/rbb-scores/";
+  if (
+    location.pathname === "/" ||
+    location.pathname === "" ||
+    location.pathname === "/index.html"
+  ) {
+    location.replace(base);
+  }
+})();
+</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icon.png">
