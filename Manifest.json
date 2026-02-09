@@ -1,6 +1,6 @@
 {
-  "name": "RBB Schiedsgericht",
-  "short_name": "Schiedsgericht",
+  "name": "RBB Scores",
+  "short_name": "RBB",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
