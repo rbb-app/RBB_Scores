@@ -62,7 +62,7 @@ button{ cursor:pointer; }
 .status{ text-align:center; font-weight:bold; margin-top:6px; }
 .ok{color:#4caf50;} .fail{color:#f44336;}
 
-.periods{ display:flex; gap:4px; justify-content:center; margin-top:0; margin-bottom:6px; flex-wrap:nowrap; }
+.periods{ display:flex; gap:4px; justify-content:center; margin-top:10px; margin-bottom:6px; flex-wrap:nowrap; }
 .periods div{
   padding:6px 10px; border-radius:6px; border:1px solid #666; cursor:pointer;
   min-width:40px; text-align:center; background:#f2f2f2; color:#000; user-select:none;
@@ -155,10 +155,10 @@ button{ cursor:pointer; }
 
 <script>
 let players=[], active={heim:[],gast:[]}, tempActive={heim:[],gast:[]}, log=[], currentPeriod="1", gameStarted=false;
+let jbActive=false, fbActive=false;
 const setupView=document.getElementById("setupView");
 const gameView=document.getElementById("gameView");
 const periodsDiv=document.getElementById("periods");
-let jbActive=false, fbActive=false;
 
 function vibrate(ms=20){ if(navigator.vibrate) navigator.vibrate(ms); }
 function toggleJB(el){ jbActive=!jbActive; el.classList.toggle("active", jbActive); }
@@ -168,19 +168,55 @@ function setPeriod(p){ currentPeriod=p; renderPeriods(); vibrate(15); }
 function renderPeriods(){ [...periodsDiv.children].forEach(d=>d.classList.toggle("active",d.dataset.period===currentPeriod)); }
 [...periodsDiv.children].forEach(d=>d.onclick=()=>setPeriod(d.dataset.period));
 
+function saveState(){
+  localStorage.setItem("players", JSON.stringify(players));
+  localStorage.setItem("active", JSON.stringify(active));
+  localStorage.setItem("tempActive", JSON.stringify(tempActive));
+  localStorage.setItem("log", JSON.stringify(log));
+  localStorage.setItem("currentPeriod", currentPeriod);
+  localStorage.setItem("nameHeim", document.getElementById("nameHeim").value);
+  localStorage.setItem("nameGast", document.getElementById("nameGast").value);
+  localStorage.setItem("gameStarted", gameStarted?"1":"0");
+}
+
+function loadState(){
+  players = JSON.parse(localStorage.getItem("players")||"[]");
+  active = JSON.parse(localStorage.getItem("active")||'{"heim":[],"gast":[]}');
+  tempActive = JSON.parse(localStorage.getItem("tempActive")||'{"heim":[],"gast":[]}');
+  log = JSON.parse(localStorage.getItem("log")||"[]");
+  currentPeriod = localStorage.getItem("currentPeriod") || "1";
+  document.getElementById("nameHeim").value = localStorage.getItem("nameHeim") || "Home";
+  document.getElementById("nameGast").value = localStorage.getItem("nameGast") || "Guest";
+  gameStarted = localStorage.getItem("gameStarted")==="1";
+
+  if(gameStarted){ setupView.style.display="none"; gameView.style.display="block"; }
+  else{ setupView.style.display="block"; gameView.style.display="none"; }
+}
+
 function startGame(){
   if(players.length===0) return alert("Please add players first");
-  gameStarted=true; setupView.style.display="none"; gameView.style.display="block"; 
-  tempActive.heim=[...active.heim]; tempActive.gast=[...active.gast]; vibrate(50); render();
+  gameStarted=true;
+  tempActive.heim=[...active.heim]; tempActive.gast=[...active.gast];
+  setupView.style.display="none"; gameView.style.display="block";
+  saveState(); render(); vibrate(50);
 }
 
 function endGame(){
   if(!confirm("Do you really want to end the game?")) return;
+
+  // CSV export
   let csv="Time;Period;Team;Players;Points\n";
   log.forEach(l=>csv+=`${l.time};${l.period};${l.team};${l.lineup.join(",")};${l.points}\n`);
-  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="substitutions.csv"; a.click();
-  players=[]; active={heim:[],gast:[]}; tempActive={heim:[],gast:[]}; log=[]; gameStarted=false;
-  setupView.style.display="block"; gameView.style.display="none"; render();
+  const a=document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], {type:"text/csv"}));
+  a.download="substitutions.csv";
+  a.click();
+
+  // Reset everything
+  players = []; active = {heim:[],gast:[]}; tempActive={heim:[],gast:[]}; log=[]; currentPeriod="1"; gameStarted=false;
+  localStorage.clear();
+  setupView.style.display="block"; gameView.style.display="none";
+  render();
 }
 
 function addPlayer(){
@@ -189,7 +225,7 @@ function addPlayer(){
   const team=document.getElementById("teamSelect").value;
   if(!num||!pts) return;
   if(players.some(p=>p.team===team && p.num===num)){ alert("This number is already taken for this team!"); return; }
-  if(players.filter(p=>p.team===team).length>=12){ alert("Maximum 12 players per team allowed!"); return; }
+  if(players.filter(p=>p.team===team).length>=12){ alert("Max 12 players per team!"); return; }
 
   let bonus=0; if(jbActive&&fbActive) bonus=2; else if(jbActive) bonus=1; else if(fbActive) bonus=1.5;
   const adjustedPts=pts-bonus;
@@ -198,34 +234,33 @@ function addPlayer(){
   players.sort((a,b)=>a.num-b.num);
 
   document.getElementById("num").value=""; document.getElementById("pts").value="";
-  jbActive=false; fbActive=false; document.getElementById("jbToggle").classList.remove("active"); document.getElementById("fbToggle").classList.remove("active");
+  jbActive=false; fbActive=false;
+  document.getElementById("jbToggle").classList.remove("active"); document.getElementById("fbToggle").classList.remove("active");
 
-  vibrate(10); render();
+  saveState(); vibrate(10); render();
 }
 
 function removePlayer(num,team){
   players=players.filter(p=>!(p.num===num && p.team===team));
   active[team]=active[team].filter(n=>n!==num); tempActive[team]=[...active[team]];
-  vibrate(30); render();
+  saveState(); vibrate(30); render();
 }
 
 function toggle(team,num){
   const l=tempActive[team]; const i=l.indexOf(num);
   if(i>=0) l.splice(i,1); else if(l.length<5) l.push(num);
-  render();
+  saveState(); render();
 }
 
 function confirmChange(team){
-  const sum = tempActive[team].map(n=>players.find(p=>p.num==n)?.pts||0).reduce((a,b)=>a+b,0);
+  const sum=tempActive[team].map(n=>players.find(p=>p.num==n)?.pts||0).reduce((a,b)=>a+b,0);
   if(sum>14.5){ alert("Cannot confirm: total points exceed 14.5!"); return; }
   active[team] = [...tempActive[team]];
-  logChange(team);
-  render();
+  logChange(team); saveState(); render();
 }
 
 function undoChange(team){
-  tempActive[team] = [...active[team]]; 
-  render();
+  tempActive[team] = [...active[team]]; saveState(); render();
 }
 
 function logChange(team){
@@ -269,7 +304,7 @@ function render(){
   });
 }
 
-render();
+loadState(); render();
 </script>
 </body>
 </html>
