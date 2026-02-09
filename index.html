@@ -6,20 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>RBB Scores</title>
 
-<script>
-(function () {
-  const base = "/RBB_Scores/";
-  if (
-    location.pathname === "/" ||
-    location.pathname === "" ||
-    location.pathname === "/index.html" ||
-    location.pathname === base + "index.html"
-  ) {
-    location.replace(base);
-  }
-})();
-</script>
-
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icon.png">
@@ -30,48 +16,40 @@
 @media (prefers-color-scheme: dark){
   :root { --bg:#121212; --fg:#fff; --card:#1e1e1e; }
 }
-body{
-  font-family:Arial;
-  margin:0;
-  padding:10px;
-  background:var(--bg);
-  color:var(--fg);
+body{ font-family:Arial; margin:0; padding:10px; background:var(--bg); color:var(--fg); }
+
+.app-icon-large{ display:block; margin:20px auto; width:120px; height:120px; }
+
+.input-row{ display:flex; flex-direction:column; align-items:center; gap:4px; margin-bottom:10px; }
+.input-top{ display:flex; gap:6px; align-items:center; }
+.input-bottom{ display:flex; gap:6px; align-items:center; }
+
+.bonus-toggle{
+  display:inline-block; padding:4px 6px; border-radius:6px; font-size:0.8em; cursor:pointer; border:1px solid #666; user-select:none;
 }
-input,select,button{padding:6px;font-size:15px;margin:4px;}
+.bonus-toggle.jb{ background:#e0ffe0; color:#4caf50; }
+.bonus-toggle.jb.active{ background:#4caf50; color:#fff; }
+.bonus-toggle.fb{ background:#ffe0f0; color:#e91e63; }
+.bonus-toggle.fb.active{ background:#e91e63; color:#fff; }
+
+input, select, button{padding:6px; font-size:15px; margin:4px;}
 input[type=number]{ text-align:center; }
 button{ cursor:pointer; }
 
-.app-icon-large{
-  display:block;
-  margin:20px auto;
-  width:120px;
-  height:120px;
-}
-
 .container{display:flex;gap:10px;flex-wrap:wrap;}
-.team{
-  flex:1;
-  background:var(--card);
-  border-radius:10px;
-  padding:10px;
-  min-width:150px;
-  transition: background 0.3s;
-}
+.team{ flex:1; background:var(--card); border-radius:10px; padding:10px; min-width:150px; transition: background 0.3s; }
 .team.ok-bg{ background: rgba(76,175,80,0.15); }
 .team.fail-bg{ background: rgba(244,67,54,0.15); }
 
-.players{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
-.player{
-  padding:10px;
-  border:3px solid #666;
-  border-radius:10px;
-  min-width:60px;
-  text-align:center;
-  cursor:pointer;
-  position:relative;
-}
+.players{display:flex;flex-wrap:wrap;gap:6px;justify-content:center; position:relative;}
+.player{ padding:10px; border:3px solid #666; border-radius:10px; min-width:60px; text-align:center; cursor:pointer; position:relative;}
 .player.active{ background: rgba(0,255,0,0.25); }
 .player .remove{ position:absolute; top:2px; right:4px; color:red; font-weight:bold; cursor:pointer; }
+
+.player .bonus{ position:absolute; top:2px; right:2px; font-size:0.7em; font-weight:bold; padding:1px 4px; border-radius:4px; pointer-events:none; }
+.player .bonus.jb{ background:#4caf50; color:#fff; }
+.player .bonus.fb{ background:#e91e63; color:#fff; }
+.player .bonus.jbfb{ background:#2196f3; color:#fff; }
 
 .status{ text-align:center; font-weight:bold; margin-top:6px; }
 .ok{color:#4caf50;} .fail{color:#f44336;}
@@ -79,10 +57,6 @@ button{ cursor:pointer; }
 .periods{ display:flex; gap:5px; justify-content:center; margin-bottom:10px; flex-wrap:wrap; }
 .periods div{ padding:12px 16px; border-radius:8px; border:1px solid #666; cursor:pointer; user-select:none; min-width:70px; text-align:center; }
 .periods div.active{ background:#4caf50; color:#fff; }
-
-.input-row{ display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-bottom:10px; }
-.input-row input, .input-row select{ width:60px; text-align:center; }
-.input-row label{ font-size:0.9em; margin-left:4px; }
 
 .setup-line{ text-align:center; margin-bottom:6px; }
 </style>
@@ -103,15 +77,19 @@ button{ cursor:pointer; }
 
   <h3>Spieler anlegen</h3>
   <div class="input-row">
-    Nr: <input id="num" type="number">
-    Pkt: <input id="pts" type="number" step="0.5" min="-0.5" max="4.5">
-    <label><input type="checkbox" id="jbToggle"> JB</label>
-    <label><input type="checkbox" id="fbToggle"> FB</label>
-    <select id="teamSelect">
-      <option value="heim">Heim</option>
-      <option value="gast">Gast</option>
-    </select>
-    <button onclick="addPlayer()">+</button>
+    <div class="input-top">
+      Nr: <input id="num" type="number">
+      Pkt: <input id="pts" type="number" step="0.5" min="-0.5" max="4.5">
+      <span id="jbToggle" class="bonus-toggle jb" onclick="toggleJB(this)">JB</span>
+      <span id="fbToggle" class="bonus-toggle fb" onclick="toggleFB(this)">FB</span>
+    </div>
+    <div class="input-bottom">
+      <select id="teamSelect">
+        <option value="heim">Heim</option>
+        <option value="gast">Gast</option>
+      </select>
+      <button onclick="addPlayer()">+</button>
+    </div>
   </div>
 
   <div class="container">
@@ -161,8 +139,12 @@ let players=[], active={heim:[],gast:[]}, log=[], currentPeriod="1", gameStarted
 const setupView=document.getElementById("setupView");
 const gameView=document.getElementById("gameView");
 const periodsDiv=document.getElementById("periods");
+let jbActive=false, fbActive=false;
 
 function vibrate(ms=20){ if(navigator.vibrate) navigator.vibrate(ms); }
+
+function toggleJB(el){ jbActive=!jbActive; el.classList.toggle("active", jbActive); }
+function toggleFB(el){ fbActive=!fbActive; el.classList.toggle("active", fbActive); }
 
 function setPeriod(p){ currentPeriod=p; renderPeriods(); vibrate(15); }
 function renderPeriods(){ [...periodsDiv.children].forEach(d=>d.classList.toggle("active",d.dataset.period===currentPeriod)); }
@@ -170,67 +152,49 @@ function renderPeriods(){ [...periodsDiv.children].forEach(d=>d.classList.toggle
 
 function startGame(){
   if(players.length===0) return alert("Bitte Spieler anlegen");
-  gameStarted=true;
-  setupView.style.display="none";
-  gameView.style.display="block";
-  vibrate(50);
-  render();
+  gameStarted=true; setupView.style.display="none"; gameView.style.display="block"; vibrate(50); render();
 }
 
 function endGame(){
   if(!confirm("Spiel wirklich beenden?")) return;
   let csv="Zeit;Periode;Team;Spieler;Punkte\n";
   log.forEach(l=>csv+=`${l.time};${l.period};${l.team};${l.lineup.join(",")};${l.points}\n`);
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
-  a.download="wechselhistorie.csv";
-  a.click();
-  players=[]; active={heim:[],gast:[]}; log=[];
-  gameStarted=false;
-  setupView.style.display="block"; gameView.style.display="none";
-  render();
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="wechselhistorie.csv"; a.click();
+  players=[]; active={heim:[],gast:[]}; log=[]; gameStarted=false;
+  setupView.style.display="block"; gameView.style.display="none"; render();
 }
 
 function addPlayer(){
   const num=+document.getElementById("num").value;
   const pts=+document.getElementById("pts").value;
   const team=document.getElementById("teamSelect").value;
-  const jb=document.getElementById("jbToggle").checked;
-  const fb=document.getElementById("fbToggle").checked;
-  if(!num || !pts) return;
+  if(!num||!pts) return;
 
-  if(players.some(p=>p.team===team && p.num===num)){ alert("Diese Nummer ist für dieses Team bereits vergeben!"); return; }
-  const teamCount=players.filter(p=>p.team===team).length;
-  if(teamCount>=12){ alert("Maximal 12 Spieler pro Team erlaubt!"); return; }
+  if(players.some(p=>p.team===team && p.num===num)){ alert("Nummer bereits vergeben!"); return; }
+  if(players.filter(p=>p.team===team).length>=12){ alert("Maximal 12 Spieler pro Team!"); return; }
 
-  let bonus=0; if(jb && fb) bonus=2; else if(jb) bonus=1; else if(fb) bonus=1.5;
-  const adjustedPts = pts - bonus;
+  let bonus=0; if(jbActive&&fbActive) bonus=2; else if(jbActive) bonus=1; else if(fbActive) bonus=1.5;
+  const adjustedPts=pts-bonus;
 
-  players.push({num, pts:adjustedPts, team, jb, fb});
+  players.push({num, pts:adjustedPts, team, jb: jbActive, fb: fbActive});
   players.sort((a,b)=>a.num-b.num);
 
-  document.getElementById("num").value="";
-  document.getElementById("pts").value="";
-  document.getElementById("jbToggle").checked=false;
-  document.getElementById("fbToggle").checked=false;
+  document.getElementById("num").value=""; document.getElementById("pts").value="";
+  jbActive=false; fbActive=false; document.getElementById("jbToggle").classList.remove("active"); document.getElementById("fbToggle").classList.remove("active");
 
-  vibrate(10);
-  render();
+  vibrate(10); render();
 }
 
 function removePlayer(num,team){
   players=players.filter(p=>!(p.num===num && p.team===team));
   active[team]=active[team].filter(n=>n!==num);
-  vibrate(30);
-  render();
+  vibrate(30); render();
 }
 
 function toggle(team,num){
   const l=active[team]; const i=l.indexOf(num);
   if(i>=0) l.splice(i,1); else if(l.length<5) l.push(num);
-  logChange(team);
-  vibrate(20);
-  render();
+  logChange(team); vibrate(20); render();
 }
 
 function logChange(team){
@@ -243,31 +207,34 @@ function renderPlayers(team,target,isSetup){
   const div=document.getElementById(target); div.innerHTML="";
   players.filter(p=>p.team===team).forEach(p=>{
     const el=document.createElement("div"); el.className="player";
-    let bonusText="";
-    if(p.jb && p.fb) bonusText="(-2)";
-    else if(p.jb) bonusText="(-1)";
-    else if(p.fb) bonusText="(-1.5)";
-    el.innerHTML=`<strong>#${p.num}</strong><br>${p.pts.toFixed(1)} ${bonusText}`;
+    el.innerHTML=`<strong>#${p.num}</strong><br>${p.pts.toFixed(1)}`;
+    if(p.jb && p.fb){ const b=document.createElement("div"); b.className="bonus jbfb"; b.textContent="JB+FB"; el.appendChild(b);}
+    else if(p.jb){ const b=document.createElement("div"); b.className="bonus jb"; b.textContent="JB"; el.appendChild(b);}
+    else if(p.fb){ const b=document.createElement("div"); b.className="bonus fb"; b.textContent="FB"; el.appendChild(b);}
     if(isSetup) el.innerHTML+=`<span class="remove" onclick="removePlayer(${p.num},'${team}')">×</span>`;
-    else { if(active[team].includes(p.num)) el.classList.add("active"); el.onclick=()=>toggle(team,p.num); }
+    else{ if(active[team].includes(p.num)) el.classList.add("active"); el.onclick=()=>toggle(team,p.num);}
     div.appendChild(el);
   });
 }
 
 function render(){
-  heimTitle.textContent=nameHeim.value||"Heim"; gastTitle.textContent=nameGast.value||"Gast";
-  heimTitleSetup.textContent=nameHeim.value||"Heim"; gastTitleSetup.textContent=nameGast.value||"Gast";
+  document.getElementById("heimTitle").textContent=document.getElementById("nameHeim").value||"Heim";
+  document.getElementById("gastTitle").textContent=document.getElementById("nameGast").value||"Gast";
+  document.getElementById("heimTitleSetup").textContent=document.getElementById("nameHeim").value||"Heim";
+  document.getElementById("gastTitleSetup").textContent=document.getElementById("nameGast").value||"Gast";
+
   renderPeriods();
-  renderPlayers("heim","heimPlayersSetup",true); renderPlayers("gast","gastPlayersSetup",true);
-  renderPlayers("heim","heimPlayers",false); renderPlayers("gast","gastPlayers",false);
+  renderPlayers("heim","heimPlayersSetup",true);
+  renderPlayers("gast","gastPlayersSetup",true);
+  renderPlayers("heim","heimPlayers",false);
+  renderPlayers("gast","gastPlayers",false);
 
   ["heim","gast"].forEach(team=>{
     const sum=active[team].map(n=>players.find(p=>p.num==n)?.pts||0).reduce((a,b)=>a+b,0);
     const st=document.getElementById(team+"Status"); if(!st) return;
     st.textContent="Punkte: "+sum.toFixed(1);
     st.className="status "+(sum<=14.5?"ok":"fail");
-    const tdiv=st.closest(".team"); tdiv.classList.remove("ok-bg","fail-bg");
-    tdiv.classList.add(sum<=14.5?"ok-bg":"fail-bg");
+    const tdiv=st.closest(".team"); tdiv.classList.remove("ok-bg","fail-bg"); tdiv.classList.add(sum<=14.5?"ok-bg":"fail-bg");
   });
 }
 
