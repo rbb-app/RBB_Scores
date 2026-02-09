@@ -22,20 +22,20 @@ body{ font-family:Arial; margin:0; padding:10px; background:var(--bg); color:var
 .app-icon-small{ position:absolute; top:10px; left:10px; width:40px; height:40px; }
 
 .input-row{ display:flex; flex-direction:column; align-items:center; gap:4px; margin-bottom:10px; }
-.input-top{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:center; }
+.input-top{ display:flex; gap:4px; align-items:center; flex-wrap:wrap; justify-content:center; }
 .input-bottom{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:center; }
 
 .bonus-toggle{
   display:inline-block;
-  padding:8px 10px;      /* größer für Touch */
+  padding:4px 6px;      /* kleiner für Touch */
   border-radius:6px;
-  font-size:0.85em;
+  font-size:0.75em;     /* kleinere Schrift */
   cursor:pointer;
   border:1px solid #666;
   user-select:none;
-  min-width:40px;
+  min-width:30px;       /* kleiner für Touch */
   text-align:center;
-  margin:2px;
+  margin:1px;
 }
 .bonus-toggle.jb{ background:#e0ffe0; color:#4caf50; }
 .bonus-toggle.jb.active{ background:#4caf50; color:#fff; }
@@ -80,15 +80,11 @@ button{ cursor:pointer; }
   <div class="setup-line">Home: <input id="nameHeim"></div>
   <div class="setup-line">Guest: <input id="nameGast"></div>
 
-  <div style="text-align:center;margin-top:10px;">
-    <button onclick="startGame()">Start Game</button>
-  </div>
-
   <h3>Add Player</h3>
   <div class="input-row">
     <div class="input-top">
       No.: <input id="num" type="number">
-      Points: <input id="pts" type="number" step="0.5" min="-0.5" max="4.5">
+      Pts: <input id="pts" type="number" step="0.5" min="-0.5" max="4.5">
       <span id="jbToggle" class="bonus-toggle jb" onclick="toggleJB(this)">JB</span>
       <span id="fbToggle" class="bonus-toggle fb" onclick="toggleFB(this)">FB</span>
     </div>
@@ -110,6 +106,10 @@ button{ cursor:pointer; }
       <h3 id="gastTitleSetup"></h3>
       <div id="gastPlayersSetup" class="players"></div>
     </div>
+  </div>
+
+  <div style="text-align:center;margin-top:10px;">
+    <button onclick="startGame()">Start Game</button>
   </div>
 </div>
 
