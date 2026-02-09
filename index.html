@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <base href="/RBB_Scores/">
@@ -19,24 +19,34 @@
 body{ font-family:Arial; margin:0; padding:10px; background:var(--bg); color:var(--fg); }
 
 .app-icon-large{ display:block; margin:20px auto; width:120px; height:120px; }
+.app-icon-small{ position:absolute; top:10px; left:10px; width:40px; height:40px; }
 
 .input-row{ display:flex; flex-direction:column; align-items:center; gap:4px; margin-bottom:10px; }
-.input-top{ display:flex; gap:6px; align-items:center; }
-.input-bottom{ display:flex; gap:6px; align-items:center; }
+.input-top{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:center; }
+.input-bottom{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:center; }
 
 .bonus-toggle{
-  display:inline-block; padding:4px 6px; border-radius:6px; font-size:0.8em; cursor:pointer; border:1px solid #666; user-select:none;
+  display:inline-block;
+  padding:8px 10px;      /* größer für Touch */
+  border-radius:6px;
+  font-size:0.85em;
+  cursor:pointer;
+  border:1px solid #666;
+  user-select:none;
+  min-width:40px;
+  text-align:center;
+  margin:2px;
 }
 .bonus-toggle.jb{ background:#e0ffe0; color:#4caf50; }
 .bonus-toggle.jb.active{ background:#4caf50; color:#fff; }
 .bonus-toggle.fb{ background:#ffe0f0; color:#e91e63; }
 .bonus-toggle.fb.active{ background:#e91e63; color:#fff; }
 
-input, select, button{padding:6px; font-size:15px; margin:4px;}
-input[type=number]{ text-align:center; }
+input, select, button{padding:6px; font-size:14px; margin:4px;}
+input[type=number]{ width:50px; text-align:center; }
 button{ cursor:pointer; }
 
-.container{display:flex;gap:10px;flex-wrap:wrap;}
+.container{display:flex;gap:10px;flex-wrap:wrap; position:relative;}
 .team{ flex:1; background:var(--card); border-radius:10px; padding:10px; min-width:150px; transition: background 0.3s; }
 .team.ok-bg{ background: rgba(76,175,80,0.15); }
 .team.fail-bg{ background: rgba(244,67,54,0.15); }
@@ -46,16 +56,17 @@ button{ cursor:pointer; }
 .player.active{ background: rgba(0,255,0,0.25); }
 .player .remove{ position:absolute; top:2px; right:4px; color:red; font-weight:bold; cursor:pointer; }
 
-.player .bonus{ position:absolute; top:2px; right:2px; font-size:0.7em; font-weight:bold; padding:1px 4px; border-radius:4px; pointer-events:none; }
-.player .bonus.jb{ background:#4caf50; color:#fff; }
-.player .bonus.fb{ background:#e91e63; color:#fff; }
-.player .bonus.jbfb{ background:#2196f3; color:#fff; }
+.player .bonus {
+  position: absolute; font-size:0.7em; font-weight:bold; padding:1px 4px; border-radius:4px; pointer-events:none;
+}
+.player .bonus.fb { top:2px; left:2px; background:#e91e63; color:#fff; }
+.player .bonus.jb { bottom:2px; left:2px; background:#4caf50; color:#fff; }
 
 .status{ text-align:center; font-weight:bold; margin-top:6px; }
 .ok{color:#4caf50;} .fail{color:#f44336;}
 
 .periods{ display:flex; gap:5px; justify-content:center; margin-bottom:10px; flex-wrap:wrap; }
-.periods div{ padding:12px 16px; border-radius:8px; border:1px solid #666; cursor:pointer; user-select:none; min-width:70px; text-align:center; }
+.periods div{ padding:12px 16px; border-radius:8px; border:1px solid #666; cursor:pointer; user-select:none; min-width:50px; text-align:center; }
 .periods div.active{ background:#4caf50; color:#fff; }
 
 .setup-line{ text-align:center; margin-bottom:6px; }
@@ -63,30 +74,28 @@ button{ cursor:pointer; }
 </head>
 <body>
 
-<!-- Großes Icon als Titel -->
-<img src="icon.png" class="app-icon-large" alt="RBB Scores Icon">
-
 <!-- SETUP VIEW -->
 <div id="setupView">
-  <div class="setup-line">Heim: <input id="nameHeim"></div>
-  <div class="setup-line">Gast: <input id="nameGast"></div>
+  <img src="icon.png" class="app-icon-large" alt="RBB Scores Icon">
+  <div class="setup-line">Home: <input id="nameHeim"></div>
+  <div class="setup-line">Guest: <input id="nameGast"></div>
 
   <div style="text-align:center;margin-top:10px;">
-    <button onclick="startGame()">Spiel starten</button>
+    <button onclick="startGame()">Start Game</button>
   </div>
 
-  <h3>Spieler anlegen</h3>
+  <h3>Add Player</h3>
   <div class="input-row">
     <div class="input-top">
-      Nr: <input id="num" type="number">
-      Pkt: <input id="pts" type="number" step="0.5" min="-0.5" max="4.5">
+      No.: <input id="num" type="number">
+      Points: <input id="pts" type="number" step="0.5" min="-0.5" max="4.5">
       <span id="jbToggle" class="bonus-toggle jb" onclick="toggleJB(this)">JB</span>
       <span id="fbToggle" class="bonus-toggle fb" onclick="toggleFB(this)">FB</span>
     </div>
     <div class="input-bottom">
       <select id="teamSelect">
-        <option value="heim">Heim</option>
-        <option value="gast">Gast</option>
+        <option value="heim">Home</option>
+        <option value="gast">Guest</option>
       </select>
       <button onclick="addPlayer()">+</button>
     </div>
@@ -105,44 +114,51 @@ button{ cursor:pointer; }
 </div>
 
 <!-- GAME VIEW -->
-<div id="gameView" style="display:none;">
-  <img src="icon.png" class="app-icon-large" alt="RBB Scores Icon">
+<div id="gameView" style="display:none; position:relative;">
+  <img src="icon.png" class="app-icon-small" alt="RBB Scores Icon">
 
   <div class="periods" id="periods">
-    <div data-period="1">1. Viertel</div>
-    <div data-period="2">2. Viertel</div>
-    <div data-period="3">3. Viertel</div>
-    <div data-period="4">4. Viertel</div>
-    <div data-period="V">Verlängerung</div>
+    <div data-period="1">Q1</div>
+    <div data-period="2">Q2</div>
+    <div data-period="3">Q3</div>
+    <div data-period="4">Q4</div>
+    <div data-period="V">OT</div>
   </div>
 
   <div class="container">
     <div class="team">
       <h3 id="heimTitle"></h3>
       <div id="heimPlayers" class="players"></div>
+      <div style="text-align:center; margin-top:4px;">
+        <button onclick="confirmChange('heim')">Confirm</button>
+        <button onclick="undoChange('heim')">Undo</button>
+      </div>
       <div id="heimStatus" class="status"></div>
     </div>
     <div class="team">
       <h3 id="gastTitle"></h3>
       <div id="gastPlayers" class="players"></div>
+      <div style="text-align:center; margin-top:4px;">
+        <button onclick="confirmChange('gast')">Confirm</button>
+        <button onclick="undoChange('gast')">Undo</button>
+      </div>
       <div id="gastStatus" class="status"></div>
     </div>
   </div>
 
   <div style="text-align:center;margin-top:10px;">
-    <button onclick="endGame()">Spiel beenden</button>
+    <button onclick="endGame()">End Game</button>
   </div>
 </div>
 
 <script>
-let players=[], active={heim:[],gast:[]}, log=[], currentPeriod="1", gameStarted=false;
+let players=[], active={heim:[],gast:[]}, tempActive={heim:[],gast:[]}, log=[], currentPeriod="1", gameStarted=false;
 const setupView=document.getElementById("setupView");
 const gameView=document.getElementById("gameView");
 const periodsDiv=document.getElementById("periods");
 let jbActive=false, fbActive=false;
 
 function vibrate(ms=20){ if(navigator.vibrate) navigator.vibrate(ms); }
-
 function toggleJB(el){ jbActive=!jbActive; el.classList.toggle("active", jbActive); }
 function toggleFB(el){ fbActive=!fbActive; el.classList.toggle("active", fbActive); }
 
@@ -151,16 +167,17 @@ function renderPeriods(){ [...periodsDiv.children].forEach(d=>d.classList.toggle
 [...periodsDiv.children].forEach(d=>d.onclick=()=>setPeriod(d.dataset.period));
 
 function startGame(){
-  if(players.length===0) return alert("Bitte Spieler anlegen");
-  gameStarted=true; setupView.style.display="none"; gameView.style.display="block"; vibrate(50); render();
+  if(players.length===0) return alert("Please add players first");
+  gameStarted=true; setupView.style.display="none"; gameView.style.display="block"; 
+  tempActive.heim=[...active.heim]; tempActive.gast=[...active.gast]; vibrate(50); render();
 }
 
 function endGame(){
-  if(!confirm("Spiel wirklich beenden?")) return;
-  let csv="Zeit;Periode;Team;Spieler;Punkte\n";
+  if(!confirm("Do you really want to end the game?")) return;
+  let csv="Time;Period;Team;Players;Points\n";
   log.forEach(l=>csv+=`${l.time};${l.period};${l.team};${l.lineup.join(",")};${l.points}\n`);
-  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="wechselhistorie.csv"; a.click();
-  players=[]; active={heim:[],gast:[]}; log=[]; gameStarted=false;
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="substitutions.csv"; a.click();
+  players=[]; active={heim:[],gast:[]}; tempActive={heim:[],gast:[]}; log=[]; gameStarted=false;
   setupView.style.display="block"; gameView.style.display="none"; render();
 }
 
@@ -170,8 +187,8 @@ function addPlayer(){
   const team=document.getElementById("teamSelect").value;
   if(!num||!pts) return;
 
-  if(players.some(p=>p.team===team && p.num===num)){ alert("Nummer bereits vergeben!"); return; }
-  if(players.filter(p=>p.team===team).length>=12){ alert("Maximal 12 Spieler pro Team!"); return; }
+  if(players.some(p=>p.team===team && p.num===num)){ alert("This number is already taken for this team!"); return; }
+  if(players.filter(p=>p.team===team).length>=12){ alert("Maximum 12 players per team allowed!"); return; }
 
   let bonus=0; if(jbActive&&fbActive) bonus=2; else if(jbActive) bonus=1; else if(fbActive) bonus=1.5;
   const adjustedPts=pts-bonus;
@@ -187,18 +204,29 @@ function addPlayer(){
 
 function removePlayer(num,team){
   players=players.filter(p=>!(p.num===num && p.team===team));
-  active[team]=active[team].filter(n=>n!==num);
+  active[team]=active[team].filter(n=>n!==num); tempActive[team]=[...active[team]];
   vibrate(30); render();
 }
 
 function toggle(team,num){
-  const l=active[team]; const i=l.indexOf(num);
+  const l=tempActive[team]; const i=l.indexOf(num);
   if(i>=0) l.splice(i,1); else if(l.length<5) l.push(num);
-  logChange(team); vibrate(20); render();
+  render();
+}
+
+function confirmChange(team){
+  active[team] = [...tempActive[team]]; 
+  logChange(team); 
+  render();
+}
+
+function undoChange(team){
+  tempActive[team] = [...active[team]]; 
+  render();
 }
 
 function logChange(team){
-  const lineup=active[team];
+  const lineup=tempActive[team];
   const sum=lineup.map(n=>players.find(p=>p.num==n)?.pts||0).reduce((a,b)=>a+b,0);
   log.push({time:new Date().toLocaleTimeString(), period:currentPeriod, team:team, lineup:[...lineup], points:sum.toFixed(1)});
 }
@@ -208,20 +236,19 @@ function renderPlayers(team,target,isSetup){
   players.filter(p=>p.team===team).forEach(p=>{
     const el=document.createElement("div"); el.className="player";
     el.innerHTML=`<strong>#${p.num}</strong><br>${p.pts.toFixed(1)}`;
-    if(p.jb && p.fb){ const b=document.createElement("div"); b.className="bonus jbfb"; b.textContent="JB+FB"; el.appendChild(b);}
-    else if(p.jb){ const b=document.createElement("div"); b.className="bonus jb"; b.textContent="JB"; el.appendChild(b);}
-    else if(p.fb){ const b=document.createElement("div"); b.className="bonus fb"; b.textContent="FB"; el.appendChild(b);}
+    if(p.fb){ const b=document.createElement("div"); b.className="bonus fb"; b.textContent="FB"; el.appendChild(b);}
+    if(p.jb){ const b=document.createElement("div"); b.className="bonus jb"; b.textContent="JB"; el.appendChild(b);}
     if(isSetup) el.innerHTML+=`<span class="remove" onclick="removePlayer(${p.num},'${team}')">×</span>`;
-    else{ if(active[team].includes(p.num)) el.classList.add("active"); el.onclick=()=>toggle(team,p.num);}
+    else{ if(tempActive[team].includes(p.num)) el.classList.add("active"); el.onclick=()=>toggle(team,p.num);}
     div.appendChild(el);
   });
 }
 
 function render(){
-  document.getElementById("heimTitle").textContent=document.getElementById("nameHeim").value||"Heim";
-  document.getElementById("gastTitle").textContent=document.getElementById("nameGast").value||"Gast";
-  document.getElementById("heimTitleSetup").textContent=document.getElementById("nameHeim").value||"Heim";
-  document.getElementById("gastTitleSetup").textContent=document.getElementById("nameGast").value||"Gast";
+  document.getElementById("heimTitle").textContent=document.getElementById("nameHeim").value||"Home";
+  document.getElementById("gastTitle").textContent=document.getElementById("nameGast").value||"Guest";
+  document.getElementById("heimTitleSetup").textContent=document.getElementById("nameHeim").value||"Home";
+  document.getElementById("gastTitleSetup").textContent=document.getElementById("nameGast").value||"Guest";
 
   renderPeriods();
   renderPlayers("heim","heimPlayersSetup",true);
@@ -230,9 +257,9 @@ function render(){
   renderPlayers("gast","gastPlayers",false);
 
   ["heim","gast"].forEach(team=>{
-    const sum=active[team].map(n=>players.find(p=>p.num==n)?.pts||0).reduce((a,b)=>a+b,0);
+    const sum=tempActive[team].map(n=>players.find(p=>p.num==n)?.pts||0).reduce((a,b)=>a+b,0);
     const st=document.getElementById(team+"Status"); if(!st) return;
-    st.textContent="Punkte: "+sum.toFixed(1);
+    st.textContent="Points: "+sum.toFixed(1);
     st.className="status "+(sum<=14.5?"ok":"fail");
     const tdiv=st.closest(".team"); tdiv.classList.remove("ok-bg","fail-bg"); tdiv.classList.add(sum<=14.5?"ok-bg":"fail-bg");
   });
