@@ -186,24 +186,6 @@ Pts
 <button onclick="adminReset()">Admin Reset</button>
 </div>
 
-<div style="text-align:center;margin-top:10px">
-  <button onclick="showHistory()">Show History</button>
-  <button onclick="endGame()">End Game & Download CSV</button>
-</div>
-
-</div>
-<!-- ================= HISTORY VIEW ================= -->
-<div id="historyView" class="hidden">
-
-<h3 style="text-align:center;">Game History</h3>
-
-<div id="historyContent" class="history-container"></div>
-
-<div style="text-align:center;margin-top:15px;">
-  <button onclick="backToGame()">Back to Game</button>
-  <button onclick="adminReset()">Back to Setup</button>
-</div>
-
 </div>
 
 <script>
@@ -325,62 +307,6 @@ a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
 a.download="history.csv";
 a.click();
 location.reload();
-}
-function showHistory(){
-
-  const container=document.getElementById("historyContent");
-  container.innerHTML="";
-
-  if(log.length===0){
-    container.innerHTML="<p style='text-align:center;'>No history yet.</p>";
-  } else {
-
-    // Perioden gruppieren
-    const grouped={};
-
-    log.forEach(entry=>{
-      if(!grouped[entry.period]) grouped[entry.period]={heim:[],gast:[]};
-      grouped[entry.period][entry.team].push(entry);
-    });
-
-    Object.keys(grouped).forEach(p=>{
-
-      const periodDiv=document.createElement("div");
-      periodDiv.className="history-period";
-
-      periodDiv.innerHTML=`<strong>${p}</strong>`;
-
-      ["heim","gast"].forEach(team=>{
-        const teamEntries=grouped[p][team];
-
-        if(teamEntries.length>0){
-          const teamDiv=document.createElement("div");
-          teamDiv.className="history-team";
-
-          const title=(team==="heim" ? nameHeim.value : nameGast.value);
-
-          teamDiv.innerHTML=`<br><u>${title}</u><br>`;
-
-          teamEntries.forEach(e=>{
-            teamDiv.innerHTML+=
-              `${e.time} → ${e.lineup.join(", ")} (${e.points ?? "-"})<br>`;
-          });
-
-          periodDiv.appendChild(teamDiv);
-        }
-      });
-
-      container.appendChild(periodDiv);
-    });
-  }
-
-  gameView.classList.add("hidden");
-  historyView.classList.remove("hidden");
-}
-
-function backToGame(){
-  historyView.classList.add("hidden");
-  gameView.classList.remove("hidden");
 }
 
 render();
