@@ -9,6 +9,10 @@ let jb = false, fb = false;
 const jbBtn = document.getElementById("jbBtn");
 const fbBtn = document.getElementById("fbBtn");
 
+// NEW: Team color selectors
+const heimColor = document.getElementById("heimColor");
+const gastColor = document.getElementById("gastColor");
+
 jbBtn.onclick = () => { jb = !jb; jbBtn.classList.toggle("active", jb); };
 fbBtn.onclick = () => { fb = !fb; fbBtn.classList.toggle("active", fb); };
 
@@ -16,7 +20,9 @@ function saveState(){
   localStorage.setItem("rbb_state", JSON.stringify({
     players, active, tempActive, log, period, gameRunning,
     nameHeim: nameHeim.value,
-    nameGast: nameGast.value
+    nameGast: nameGast.value,
+    heimColor: heimColor.value,
+    gastColor: gastColor.value
   }));
 }
 
@@ -35,6 +41,9 @@ function loadState(){
   nameHeim.value = data.nameHeim || "Home";
   nameGast.value = data.nameGast || "Guest";
 
+  heimColor.value = data.heimColor || "#4caf50";
+  gastColor.value = data.gastColor || "#2196f3";
+
   render();
 }
 
@@ -49,7 +58,14 @@ function addPlayer(){
   const n = +num.value;
   const p = parseFloat(pts.value);
   const t = teamSelect.value;
+
   if(!n || isNaN(p)) return;
+
+  // Nummern-Check
+  if(players.some(pl => pl.team === t && pl.num === n)){
+    alert("Diese Nummer ist in diesem Team bereits vergeben.");
+    return;
+  }
 
   players.push({num:n, pts:calcPts(p), team:t, jb, fb});
 
@@ -71,6 +87,10 @@ function render(){
   gastTitle.textContent = nameGast.value;
   heimTitleSetup.textContent = nameHeim.value;
   gastTitleSetup.textContent = nameGast.value;
+
+  // Apply team colors
+  heimTeam.style.borderColor = heimColor.value;
+  gastTeam.style.borderColor = gastColor.value;
 
   renderList("heim", "heimPlayersSetup", true);
   renderList("gast", "gastPlayersSetup", true);
@@ -126,8 +146,18 @@ function togglePlayer(team, num){
     tempActive[team].push(num);
   }
 
+  animateTeamFlash(team);
   updateTeamStatus(team);
   render();
+}
+
+function animateTeamFlash(team){
+  const box = document.getElementById(team + "Team");
+  box.style.transition = "background-color .3s ease";
+  box.style.backgroundColor = "rgba(255,255,0,0.3)";
+  setTimeout(() => {
+    box.style.backgroundColor = "";
+  }, 300);
 }
 
 function updateTeamStatus(team){
@@ -204,6 +234,7 @@ function confirmChange(team){
     lineup: active[team]
   });
 
+  animateTeamFlash(team);
   saveState();
   render();
 }
