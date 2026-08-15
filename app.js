@@ -6,13 +6,8 @@ let period = "Q1";
 let gameRunning = false;
 let jb = false, fb = false;
 
-// Bonus buttons
 const jbBtn = document.getElementById("jbBtn");
 const fbBtn = document.getElementById("fbBtn");
-
-// Team color inputs
-const heimColor = document.getElementById("heimColor");
-const gastColor = document.getElementById("gastColor");
 
 jbBtn.onclick = () => { jb = !jb; jbBtn.classList.toggle("active", jb); };
 fbBtn.onclick = () => { fb = !fb; fbBtn.classList.toggle("active", fb); };
@@ -21,9 +16,7 @@ function saveState(){
   localStorage.setItem("rbb_state", JSON.stringify({
     players, active, tempActive, log, period, gameRunning,
     nameHeim: nameHeim.value,
-    nameGast: nameGast.value,
-    heimColor: heimColor.value,
-    gastColor: gastColor.value
+    nameGast: nameGast.value
   }));
 }
 
@@ -42,9 +35,6 @@ function loadState(){
   nameHeim.value = data.nameHeim || "";
   nameGast.value = data.nameGast || "";
 
-  heimColor.value = data.heimColor || "#4caf50";
-  gastColor.value = data.gastColor || "#2196f3";
-
   render();
 }
 
@@ -62,7 +52,6 @@ function addPlayer(){
 
   if(!n || isNaN(p)) return;
 
-  // Prevent duplicate numbers
   if(players.some(pl => pl.team === t && pl.num === n)){
     alert("Diese Nummer ist in diesem Team bereits vergeben.");
     return;
@@ -70,7 +59,6 @@ function addPlayer(){
 
   players.push({num:n, pts:calcPts(p), team:t, jb, fb});
 
-  // Sort players by number
   players.sort((a, b) => a.num - b.num);
 
   num.value = "";
@@ -88,10 +76,6 @@ function render(){
   gastTitle.textContent = nameGast.value || "Guest";
   heimTitleSetup.textContent = nameHeim.value || "Home";
   gastTitleSetup.textContent = nameGast.value || "Guest";
-
-  // Apply team colors
-  heimTeam.style.borderColor = heimColor.value;
-  gastTeam.style.borderColor = gastColor.value;
 
   renderList("heim", "heimPlayersSetup", true);
   renderList("gast", "gastPlayersSetup", true);
@@ -112,7 +96,6 @@ function renderList(team, target, setup){
     const e = document.createElement("div");
     e.className = "player";
 
-    // Game view: player selection
     if(!setup){
       e.onclick = () => togglePlayer(team, p.num);
 
@@ -147,18 +130,8 @@ function togglePlayer(team, num){
     tempActive[team].push(num);
   }
 
-  animateTeamFlash(team);
   updateTeamStatus(team);
   render();
-}
-
-function animateTeamFlash(team){
-  const box = document.getElementById(team + "Team");
-  box.style.transition = "background-color .3s ease";
-  box.style.backgroundColor = "rgba(255,255,0,0.3)";
-  setTimeout(() => {
-    box.style.backgroundColor = "";
-  }, 300);
 }
 
 function updateTeamStatus(team){
@@ -235,7 +208,6 @@ function confirmChange(team){
     lineup: active[team]
   });
 
-  animateTeamFlash(team);
   saveState();
   render();
 }
