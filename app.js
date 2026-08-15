@@ -23,12 +23,9 @@ const gastTitleSetup = document.getElementById("gastTitleSetup");
 
 const setupView = document.getElementById("setupView");
 const gameView = document.getElementById("gameView");
-const historyView = document.getElementById("historyView");
 
-const gameStatus = document.getElementById("gameStatus");
-const realStartBtn = document.getElementById("realStartBtn");
-const endQuarterBtn = document.getElementById("endQuarterBtn");
-const nextQuarterBtn = document.getElementById("nextQuarterBtn");
+// History View (wird später ergänzt)
+let historyView = null;
 
 // Live update names
 nameHeim.addEventListener("input", render);
@@ -324,6 +321,40 @@ function adminReset(){
 
 /* ——— HISTORY ——— */
 function showHistory(){
+  // History-View erzeugen, falls nicht vorhanden
+  if(!historyView){
+    historyView = document.createElement("div");
+    historyView.id = "historyView";
+    historyView.style.marginTop = "65px";
+    historyView.classList.add("historyFade");
+
+    historyView.innerHTML = `
+      <h3 style="text-align:center;">History</h3>
+      <table id="historyTable" style="width:100%;border-collapse:collapse;margin-top:20px;">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Period</th>
+            <th>Team</th>
+            <th>Players</th>
+            <th>Total Pts</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div style="text-align:center;margin-top:20px;">
+        <button onclick="backToGame()">⬅ Back to Game</button>
+      </div>
+
+      <div style="text-align:center;margin-top:10px;">
+        <button class="danger-btn" onclick="finishGame()">⚠ Finish Game</button>
+      </div>
+    `;
+
+    document.body.appendChild(historyView);
+  }
+
   const tbody = document.querySelector("#historyTable tbody");
   tbody.innerHTML = "";
 
@@ -334,7 +365,9 @@ function showHistory(){
     // Perioden-Trennlinie
     if(entry.period !== lastPeriod){
       const sep = document.createElement("tr");
-      sep.className = "periodRow";
+      sep.style.background = "rgba(0,0,0,0.08)";
+      sep.style.fontWeight = "bold";
+      sep.style.textAlign = "center";
       sep.innerHTML = `<td colspan="5">${entry.period}</td>`;
       tbody.appendChild(sep);
       lastPeriod = entry.period;
@@ -345,35 +378,8 @@ function showHistory(){
       .reduce((a,b) => a+b, 0);
 
     const tr = document.createElement("tr");
-    tr.className = entry.team === "heim" ? "heimRow" : "gastRow";
+    tr.style.background = entry.team === "heim"
+      ? "rgba(33,150,243,0.15)"
+      : "rgba(76,175,80,0.15)";
 
-    const teamName = entry.team === "heim" ? nameHeim.value : nameGast.value;
-
-    tr.innerHTML = `
-      <td>${entry.time}</td>
-      <td>${entry.period}</td>
-      <td>${teamName}</td>
-      <td>${entry.lineup.join(", ")}</td>
-      <td>${totalPts.toFixed(1)}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  gameView.classList.add("hidden");
-  historyView.classList.remove("hidden");
-}
-
-function backToGame(){
-  historyView.classList.add("hidden");
-  gameView.classList.remove("hidden");
-}
-
-function finishGame(){
-  if(!confirm("Spiel wirklich abschließen?")) return;
-
-  localStorage.removeItem("rbb_state");
-  alert("Spiel wurde abgeschlossen.");
-  location.reload();
-}
-
-loadState();
+    const teamName
