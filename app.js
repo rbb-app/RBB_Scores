@@ -1,18 +1,25 @@
+/* ============================================================
+   RBB SCORES – Optimierte Version (Option A + Option 2)
+   UX-verbessert, kompatibel zur neuen index.html
+   ============================================================ */
+
 let players = [];
-let active = {heim:[], gast:[]};
-let tempActive = {heim:[], gast:[]};
-let log = [];
+let active = { heim: [], gast: [] };       // tatsächliche Lineups pro Quarter
+let tempActive = { heim: [], gast: [] };   // UI-Auswahl
+let log = [];                              // History-Einträge
 let period = "Q1";
 let gameRunning = false;
+
 let jb = false, fb = false;
 
-// DOM-Referenzen
+/* ------------------------------------------------------------
+   DOM-Referenzen
+------------------------------------------------------------ */
 const jbBtn = document.getElementById("jbBtn");
 const fbBtn = document.getElementById("fbBtn");
 const num = document.getElementById("num");
 const pts = document.getElementById("pts");
 const teamSelect = document.getElementById("teamSelect");
-
 const nameHeim = document.getElementById("nameHeim");
 const nameGast = document.getElementById("nameGast");
 
@@ -24,17 +31,28 @@ const gastTitleSetup = document.getElementById("gastTitleSetup");
 const setupView = document.getElementById("setupView");
 const gameView = document.getElementById("gameView");
 
-// History View (wird später ergänzt)
-let historyView = null;
+const realStartBtn = document.getElementById("realStartBtn");
+const endQuarterBtn = document.getElementById("endQuarterBtn");
+const nextQuarterBtn = document.getElementById("nextQuarterBtn");
+const gameStatus = document.getElementById("gameStatus");
 
-// Live update names
-nameHeim.addEventListener("input", render);
-nameGast.addEventListener("input", render);
+/* ------------------------------------------------------------
+   Bonus-Buttons
+------------------------------------------------------------ */
+jbBtn.onclick = () => {
+  jb = !jb;
+  jbBtn.classList.toggle("active", jb);
+};
 
-jbBtn.onclick = () => { jb = !jb; jbBtn.classList.toggle("active", jb); };
-fbBtn.onclick = () => { fb = !fb; fbBtn.classList.toggle("active", fb); };
+fbBtn.onclick = () => {
+  fb = !fb;
+  fbBtn.classList.toggle("active", fb);
+};
 
-function saveState(){
+/* ------------------------------------------------------------
+   State speichern / laden
+------------------------------------------------------------ */
+function saveState() {
   localStorage.setItem("rbb_state", JSON.stringify({
     players, active, tempActive, log, period, gameRunning,
     nameHeim: nameHeim.value,
@@ -42,18 +60,19 @@ function saveState(){
   }));
 }
 
-function loadState(){
+function loadState() {
   const s = localStorage.getItem("rbb_state");
-  if(!s) {
+  if (!s) {
     render();
     updateTimeline();
     return;
   }
+
   const data = JSON.parse(s);
 
   players = data.players || [];
-  active = data.active || {heim:[], gast:[]};
-  tempActive = data.tempActive || {heim:[], gast:[]};
+  active = data.active || { heim: [], gast: [] };
+  tempActive = data.tempActive || { heim: [], gast: [] };
   log = data.log || [];
   period = data.period || "Q1";
   gameRunning = data.gameRunning || false;
@@ -65,26 +84,46 @@ function loadState(){
   updateTimeline();
 }
 
-function calcPts(p){
-  if(jb && fb) return p - 2;
-  if(jb) return p - 1;
-  if(fb) return p - 1.5;
+/* ------------------------------------------------------------
+   Setup-Validierung
+------------------------------------------------------------ */
+function validateSetup() {
+  if (!nameHeim.value.trim() || !nameGast.value.trim()) {
+    alert("Bitte Teamnamen eingeben.");
+    return false;
+  }
+  return true;
+}
+
+/* ------------------------------------------------------------
+   Punkteberechnung mit Bonus
+------------------------------------------------------------ */
+function calcPts(p) {
+  if (jb && fb) return p - 2;
+  if (jb) return p - 1;
+  if (fb) return p - 1.5;
   return p;
 }
 
-function addPlayer(){
+/* ------------------------------------------------------------
+   Spieler hinzufügen
+------------------------------------------------------------ */
+function addPlayer() {
   const n = +num.value;
   const p = parseFloat(pts.value);
   const t = teamSelect.value;
 
-  if(!n || isNaN(p)) return;
+  if (!n || isNaN(p)) {
+    alert("Bitte Nummer und Punkte auswählen.");
+    return;
+  }
 
-  if(players.some(pl => pl.team === t && pl.num === n)){
+  if (players.some(pl => pl.team === t && pl.num === n)) {
     alert("Diese Nummer ist in diesem Team bereits vergeben.");
     return;
   }
 
-  players.push({num:n, pts:calcPts(p), team:t, jb, fb});
+  players.push({ num: n, pts: calcPts(p), team: t, jb, fb });
   players.sort((a, b) => a.num - b.num);
 
   num.value = "";
@@ -97,25 +136,18 @@ function addPlayer(){
   saveState();
 }
 
-function render(){
+/* ------------------------------------------------------------
+   Render-Funktion
+------------------------------------------------------------ */
+function render() {
   heimTitle.textContent = nameHeim.value || "Home";
   gastTitle.textContent = nameGast.value || "Guest";
   heimTitleSetup.textContent = nameHeim.value || "Home";
   gastTitleSetup.textContent = nameGast.value || "Guest";
 
-  // Dropdown dynamisch aktualisieren
-  const optHeim = document.querySelector('#teamSelect option[value="heim"]');
-  const optGast = document.querySelector('#teamSelect option[value="gast"]');
-
-  if (optHeim) optHeim.textContent = nameHeim.value || "Home";
-  if (optGast) optGast.textContent = nameGast.value || "Guest";
-
-  // Pulse Animation
-  const sel = document.getElementById("teamSelect");
-  if (sel) {
-    sel.classList.add("pulse");
-    setTimeout(() => sel.classList.remove("pulse"), 300);
-  }
+  // Pulse Animation für TeamSelect
+  teamSelect.classList.add("pulse");
+  setTimeout(() => teamSelect.classList.remove("pulse"), 300);
 
   renderList("heim", "heimPlayersSetup", true);
   renderList("gast", "gastPlayersSetup", true);
@@ -128,9 +160,13 @@ function render(){
   saveState();
 }
 
-function renderList(team, target, setup){
+/* ------------------------------------------------------------
+   Spielerlisten rendern
+------------------------------------------------------------ */
+function renderList(team, target, setup) {
   const d = document.getElementById(target);
   if (!d) return;
+
   d.innerHTML = "";
 
   const teamPlayers = players.filter(p => p.team === team);
@@ -139,19 +175,19 @@ function renderList(team, target, setup){
     const e = document.createElement("div");
     e.className = "player";
 
-    if(!setup){
+    if (!setup) {
       e.onclick = () => togglePlayer(team, p.num, index);
-      if(tempActive[team].includes(p.num)){
+      if (tempActive[team].includes(p.num)) {
         e.classList.add("active");
       }
     }
 
     e.innerHTML = `#${p.num}<br>${p.pts.toFixed(1)}`;
 
-    if(p.fb) e.innerHTML += `<div class="bonus fb">FB</div>`;
-    if(p.jb) e.innerHTML += `<div class="bonus jb">JB</div>`;
+    if (p.fb) e.innerHTML += `<div class="bonus fb">FB</div>`;
+    if (p.jb) e.innerHTML += `<div class="bonus jb">JB</div>`;
 
-    if(setup){
+    if (setup) {
       e.innerHTML += `<div class="remove" onclick="removePlayer(${p.num}, '${p.team}')">×</div>`;
     }
 
@@ -159,13 +195,16 @@ function renderList(team, target, setup){
   });
 }
 
-function togglePlayer(team, num, index){
+/* ------------------------------------------------------------
+   Spieler aktivieren / deaktivieren
+------------------------------------------------------------ */
+function togglePlayer(team, num, index) {
   const list = tempActive[team];
 
-  if(list.includes(num)){
+  if (list.includes(num)) {
     tempActive[team] = list.filter(n => n !== num);
   } else {
-    if(tempActive[team].length >= 5){
+    if (tempActive[team].length >= 5) {
       alert("Maximal 5 Spieler gleichzeitig.");
       return;
     }
@@ -173,27 +212,9 @@ function togglePlayer(team, num, index){
     const ptsAfter = tempActive[team]
       .concat([num])
       .map(n => players.find(p => p.num === n && p.team === team)?.pts || 0)
-      .reduce((a,b) => a+b, 0);
+      .reduce((a, b) => a + b, 0);
 
-    if(ptsAfter > 14.5){
-      const playerEl = document.querySelector(`#${team}Players .player:nth-child(${index+1})`);
-      if(playerEl){
-        playerEl.style.transition = "background-color .3s ease";
-        playerEl.style.backgroundColor = "rgba(255,0,0,0.6)";
-        setTimeout(() => {
-          playerEl.style.backgroundColor = "";
-        }, 300);
-      }
-
-      const box = document.getElementById(team + "Team");
-      if (box) {
-        box.style.transition = "background-color .3s ease";
-        box.style.backgroundColor = "rgba(255,0,0,0.3)";
-        setTimeout(() => {
-          box.style.backgroundColor = "";
-        }, 300);
-      }
-
+    if (ptsAfter > 14.5) {
       alert("Diese Aufstellung ist nicht möglich (14.5 Punkte überschritten).");
       return;
     }
@@ -205,94 +226,134 @@ function togglePlayer(team, num, index){
   render();
 }
 
-function updateTeamStatus(team){
+/* ------------------------------------------------------------
+   Teamstatus aktualisieren
+------------------------------------------------------------ */
+function updateTeamStatus(team) {
   const ptsTotal = tempActive[team]
     .map(n => players.find(p => p.num === n && p.team === team)?.pts || 0)
-    .reduce((a,b) => a+b, 0);
+    .reduce((a, b) => a + b, 0);
 
   const box = document.getElementById(team + "Team");
   const statusEl = document.getElementById(team + "Status");
 
   if (!box || !statusEl) return;
 
-  if(ptsTotal > 14.5){
-    box.classList.add("fail");
-    box.classList.remove("ok");
-  } else {
-    box.classList.add("ok");
-    box.classList.remove("fail");
-  }
+  box.classList.toggle("ok", ptsTotal <= 14.5);
+  box.classList.toggle("fail", ptsTotal > 14.5);
 
   statusEl.textContent = `Total: ${ptsTotal.toFixed(1)} / 14.5`;
 }
 
-function updateTimeline(){
-  const order = ["Q1","Q2","Q3","Q4","OT"];
-  const currentIndex = order.indexOf(period);
-
+/* ------------------------------------------------------------
+   Timeline aktualisieren
+------------------------------------------------------------ */
+function updateTimeline() {
   const items = document.querySelectorAll("#periodTimeline div");
-  items.forEach((el, i) => {
-    el.style.opacity = "1";
-    el.style.fontWeight = "normal";
-    el.style.background = "var(--card)";
-    el.style.borderRadius = "10px";
-    el.style.padding = "6px 10px";
 
-    if(i < currentIndex){
-      el.style.background = "rgba(76,175,80,0.25)";
-      el.style.fontWeight = "bold";
-    }
-
-    if(i === currentIndex){
-      el.style.background = "rgba(33,150,243,0.35)";
-      el.style.fontWeight = "bold";
-    }
-
-    if(i > currentIndex){
-      el.style.opacity = "0.5";
-    }
+  items.forEach(el => {
+    el.classList.toggle("active", el.dataset.p === period);
   });
 }
 
-function removePlayer(num, team){
+/* ------------------------------------------------------------
+   Spieler entfernen
+------------------------------------------------------------ */
+function removePlayer(num, team) {
   players = players.filter(p => !(p.num === num && p.team === team));
+  tempActive[team] = tempActive[team].filter(n => n !== num);
   render();
   saveState();
 }
 
-function startGame(){
+/* ------------------------------------------------------------
+   Setup → Game View
+------------------------------------------------------------ */
+function startGame() {
+  if (!validateSetup()) return;
+
   setupView.classList.add("hidden");
   gameView.classList.remove("hidden");
+
   saveState();
 }
 
-function startRealGame(){
+/* ------------------------------------------------------------
+   Spiel starten
+------------------------------------------------------------ */
+function startRealGame() {
   gameRunning = true;
+
+  active.heim = [...tempActive.heim];
+  active.gast = [...tempActive.gast];
+
+  log.push({
+    time: new Date().toLocaleTimeString(),
+    period,
+    team: "heim",
+    lineup: [...active.heim]
+  });
+
+  log.push({
+    time: new Date().toLocaleTimeString(),
+    period,
+    team: "gast",
+    lineup: [...active.gast]
+  });
+
   gameStatus.innerHTML = `<strong>Game Running - ${period}</strong>`;
   realStartBtn.classList.add("hidden");
   endQuarterBtn.classList.remove("hidden");
+
   saveState();
   updateTimeline();
 }
 
-function endQuarter(){
+/* ------------------------------------------------------------
+   Quarter beenden
+------------------------------------------------------------ */
+function endQuarter() {
   gameRunning = false;
+
   gameStatus.innerHTML = `<strong>${period} ended</strong>`;
   endQuarterBtn.classList.add("hidden");
   nextQuarterBtn.classList.remove("hidden");
+
   saveState();
 }
 
-function nextQuarter(){
-  const order = ["Q1","Q2","Q3","Q4","OT"];
+/* ------------------------------------------------------------
+   Nächstes Quarter starten
+------------------------------------------------------------ */
+function nextQuarter() {
+  const order = ["Q1", "Q2", "Q3", "Q4", "OT"];
   let i = order.indexOf(period);
-  if(i < order.length - 1) period = order[i+1];
+
+  if (i < order.length - 1) period = order[i + 1];
 
   document.querySelectorAll(".periods div").forEach(d => {
     d.classList.toggle("active", d.dataset.p === period);
   });
 
   gameRunning = true;
+
+  active.heim = [...tempActive.heim];
+  active.gast = [...tempActive.gast];
+
+  log.push({
+    time: new Date().toLocaleTimeString(),
+    period,
+    team: "heim",
+    lineup: [...active.heim]
+  });
+
+  log.push({
+    time: new Date().toLocaleTimeString(),
+    period,
+    team: "gast",
+    lineup: [...active.gast]
+  });
+
   gameStatus.innerHTML = `<strong>Game Running - ${period}</strong>`;
   nextQuarterBtn.classList.add("hidden");
   endQuarterBtn.classList.remove("hidden");
@@ -301,35 +362,27 @@ function nextQuarter(){
   updateTimeline();
 }
 
-function adminReset(){
-  if(!confirm("Return to setup without deleting players?")) return;
-
-  localStorage.removeItem("rbb_state");
-
-  gameRunning = false;
-  period = "Q1";
-  active = {heim:[], gast:[]};
-  tempActive = {heim:[], gast:[]};
-  log = [];
-
-  gameView.classList.add("hidden");
-  setupView.classList.remove("hidden");
-
-  render();
-  updateTimeline();
+/* ------------------------------------------------------------
+   End Game → History View (Option 2)
+------------------------------------------------------------ */
+function endGame() {
+  showHistory();
 }
 
-/* ——— HISTORY ——— */
-function showHistory(){
-  // History-View erzeugen, falls nicht vorhanden
-  if(!historyView){
+/* ------------------------------------------------------------
+   History anzeigen
+------------------------------------------------------------ */
+let historyView = null;
+
+function showHistory() {
+  if (!historyView) {
     historyView = document.createElement("div");
     historyView.id = "historyView";
     historyView.style.marginTop = "65px";
-    historyView.classList.add("historyFade");
 
     historyView.innerHTML = `
       <h3 style="text-align:center;">History</h3>
+
       <table id="historyTable" style="width:100%;border-collapse:collapse;margin-top:20px;">
         <thead>
           <tr>
@@ -348,7 +401,7 @@ function showHistory(){
       </div>
 
       <div style="text-align:center;margin-top:10px;">
-        <button class="danger-btn" onclick="finishGame()">⚠ Finish Game</button>
+        <button class="danger-btn" onclick="finishGame()">Neues Spiel starten</button>
       </div>
     `;
 
@@ -361,9 +414,7 @@ function showHistory(){
   let lastPeriod = null;
 
   log.forEach(entry => {
-
-    // Perioden-Trennlinie
-    if(entry.period !== lastPeriod){
+    if (entry.period !== lastPeriod) {
       const sep = document.createElement("tr");
       sep.style.background = "rgba(0,0,0,0.08)";
       sep.style.fontWeight = "bold";
@@ -375,11 +426,68 @@ function showHistory(){
 
     const totalPts = entry.lineup
       .map(num => players.find(p => p.num === num && p.team === entry.team)?.pts || 0)
-      .reduce((a,b) => a+b, 0);
+      .reduce((a, b) => a + b, 0);
 
     const tr = document.createElement("tr");
     tr.style.background = entry.team === "heim"
       ? "rgba(33,150,243,0.15)"
       : "rgba(76,175,80,0.15)";
 
-    const teamName
+    const teamName = entry.team === "heim" ? nameHeim.value : nameGast.value;
+
+    tr.innerHTML = `
+      <td>${entry.time}</td>
+      <td>${entry.period}</td>
+      <td>${teamName}</td>
+      <td>${entry.lineup.join(", ")}</td>
+      <td>${totalPts.toFixed(1)}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+
+  setupView.classList.add("hidden");
+  gameView.classList.add("hidden");
+  historyView.classList.remove("hidden");
+}
+
+/* ------------------------------------------------------------
+   Zurück zum Spiel
+------------------------------------------------------------ */
+function backToGame() {
+  historyView.classList.add("hidden");
+  gameView.classList.remove("hidden");
+}
+
+/* ------------------------------------------------------------
+   Neues Spiel starten (Option A – kompletter Reset)
+------------------------------------------------------------ */
+function finishGame() {
+  if (!confirm("Neues Spiel starten? Alle Daten werden gelöscht.")) return;
+
+  localStorage.removeItem("rbb_state");
+
+  players = [];
+  active = { heim: [], gast: [] };
+  tempActive = { heim: [], gast: [] };
+  log = [];
+  period = "Q1";
+  gameRunning = false;
+
+  nameHeim.value = "";
+  nameGast.value = "";
+
+  if (historyView) historyView.remove();
+  historyView = null;
+
+  gameView.classList.add("hidden");
+  setupView.classList.remove("hidden");
+
+  render();
+  updateTimeline();
+}
+
+/* ------------------------------------------------------------
+   Initial Load
+------------------------------------------------------------ */
+loadState();
