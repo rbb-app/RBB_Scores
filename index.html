@@ -13,7 +13,6 @@
 <title>RBB Scores</title>
 
 <style>
-/* --- dein kompletter Style unverändert --- */
 :root{
   --bg:#f7f7f7;
   --fg:#111;
@@ -195,6 +194,17 @@ button:hover{
 .danger-btn:hover{
   transform:scale(1.05);
 }
+
+/* ⭐ Pulse Animation */
+.pulse {
+  animation: pulseAnim .3s ease;
+}
+
+@keyframes pulseAnim {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
 </style>
 </head>
 
@@ -301,19 +311,6 @@ Pts
 </div>
 
 </div>
-
-<!-- ⭐ WICHTIG: Script GANZ AM ENDE -->
-<script>
-function checkInputs(){
-  const ids = ["jbBtn","fbBtn","num","pts","teamSelect","nameHeim","nameGast"];
-  const missing = ids.filter(id => !document.getElementById(id));
-
-  if(missing.length){
-    alert("Fehler: Folgende Elemente fehlen im HTML:\n" + missing.join(", "));
-  }
-}
-checkInputs();
-</script>
 
 <script src="app.js"></script>
 
