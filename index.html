@@ -215,6 +215,15 @@ Home <input id="nameHeim" placeholder="Home"><br>
 Guest <input id="nameGast" placeholder="Guest">
 </div>
 
+<script>
+document.getElementById("nameHeim").addEventListener("focus", function(){
+  this.placeholder = "";
+});
+document.getElementById("nameGast").addEventListener("focus", function(){
+  this.placeholder = "";
+});
+</script>
+
 <h3 style="text-align:center;">Add Player</h3>
 
 <div style="text-align:center;margin-bottom:6px;">
