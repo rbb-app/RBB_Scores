@@ -36,6 +36,10 @@ const endQuarterBtn = document.getElementById("endQuarterBtn");
 const nextQuarterBtn = document.getElementById("nextQuarterBtn");
 const gameStatus = document.getElementById("gameStatus");
 
+const confirmHeimBtn = document.getElementById("confirmHeimBtn");
+const confirmGastBtn = document.getElementById("confirmGastBtn");
+
+
 /* ------------------------------------------------------------
    Teamnamen dynamisch aktualisieren
 ------------------------------------------------------------ */
@@ -237,6 +241,45 @@ function togglePlayer(team, num, index) {
 
   updateTeamStatus(team);
   render();
+  showConfirmButton(team);
+}
+
+function showConfirmButton(team) {
+  if (team === "heim") {
+    confirmHeimBtn.classList.remove("hidden");
+  } else {
+    confirmGastBtn.classList.remove("hidden");
+  }
+}
+
+function confirmChange(team) {
+
+  const ptsTotal = tempActive[team]
+    .map(n => players.find(p => p.num === n && p.team === team)?.pts || 0)
+    .reduce((a,b) => a+b, 0);
+
+  if (ptsTotal > 14.5) {
+    alert("Diese Aufstellung ist nicht möglich (14.5 Punkte überschritten).");
+    return;
+  }
+
+  active[team] = [...tempActive[team]];
+
+  log.push({
+    time: new Date().toLocaleTimeString(),
+    period,
+    team,
+    lineup: [...active[team]]
+  });
+
+  if (team === "heim") {
+    confirmHeimBtn.classList.add("hidden");
+  } else {
+    confirmGastBtn.classList.add("hidden");
+  }
+
+  saveState();
+  render();
 }
 
 /* ------------------------------------------------------------
@@ -265,8 +308,13 @@ function updateTimeline() {
   const items = document.querySelectorAll("#periodTimeline div");
 
   items.forEach(el => {
-    el.classList.toggle("active", el.dataset.p === period);
+    el.classList.remove("active");
   });
+
+  if (gameRunning) {
+    const current = document.querySelector(`#periodTimeline div[data-p="${period}"]`);
+    if (current) current.classList.add("active");
+  }
 }
 
 /* ------------------------------------------------------------
