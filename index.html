@@ -14,6 +14,7 @@
 <title>RBB Scores</title>
 
 <style>
+/* --- dein kompletter Style unverändert --- */
 :root{
   --bg:#f7f7f7;
   --fg:#111;
@@ -320,17 +321,25 @@ Pts
 <h3 id="heimTitle"></h3>
 <div id="heimPlayers" class="players"></div>
 <div id="heimStatus" class="status"></div>
+
+<div class="center mt-10">
+<button id="confirmHeimBtn" onclick="confirmChange('heim')" class="hidden">Confirm Heim</button>
+</div>
 </div>
 
 <div class="team" id="gastTeam">
 <h3 id="gastTitle"></h3>
 <div id="gastPlayers" class="players"></div>
 <div id="gastStatus" class="status"></div>
+
+<div class="center mt-10">
+<button id="confirmGastBtn" onclick="confirmChange('gast')" class="hidden">Confirm Guest</button>
+</div>
 </div>
 </div>
 
 <div class="center mt-15">
-<button class="danger-btn" onclick="endGame()">⚠ End Game & Download CSV</button>
+<button class="danger-btn" onclick="endGame()">📘 Game History</button>
 </div>
 
 <div class="center mt-10">
@@ -338,18 +347,6 @@ Pts
 </div>
 
 </div>
-
-<script>
-function checkInputs(){
-  const ids = ["jbBtn","fbBtn","num","pts","teamSelect","nameHeim","nameGast"];
-  const missing = ids.filter(id => !document.getElementById(id));
-
-  if(missing.length){
-    alert("Fehler: Folgende Elemente fehlen im HTML:\n" + missing.join(", "));
-  }
-}
-checkInputs();
-</script>
 
 <script src="app.js"></script>
 
