@@ -52,7 +52,12 @@ function addPlayer(){
   if(!n || isNaN(p)) return;
 
   players.push({num:n, pts:calcPts(p), team:t, jb, fb});
-  num.value = ""; pts.value = "";
+
+  // Sort players by number
+  players.sort((a, b) => a.num - b.num);
+
+  num.value = "";
+  pts.value = "";
   jb = fb = false;
   jbBtn.classList.remove("active");
   fbBtn.classList.remove("active");
@@ -72,21 +77,76 @@ function render(){
   renderList("heim", "heimPlayers", false);
   renderList("gast", "gastPlayers", false);
 
+  updateTeamStatus("heim");
+  updateTeamStatus("gast");
+
   saveState();
 }
 
 function renderList(team, target, setup){
   const d = document.getElementById(target);
   d.innerHTML = "";
+
   players.filter(p => p.team === team).forEach(p => {
     const e = document.createElement("div");
     e.className = "player";
+
+    // Game view: player selection
+    if(!setup){
+      e.onclick = () => togglePlayer(team, p.num);
+
+      if(tempActive[team].includes(p.num)){
+        e.classList.add("active");
+      }
+    }
+
     e.innerHTML = `#${p.num}<br>${p.pts.toFixed(1)}`;
+
     if(p.fb) e.innerHTML += `<div class="bonus fb">FB</div>`;
     if(p.jb) e.innerHTML += `<div class="bonus jb">JB</div>`;
-    if(setup) e.innerHTML += `<div class="remove" onclick="removePlayer(${p.num}, '${p.team}')">×</div>`;
+
+    if(setup){
+      e.innerHTML += `<div class="remove" onclick="removePlayer(${p.num}, '${p.team}')">×</div>`;
+    }
+
     d.appendChild(e);
   });
+}
+
+function togglePlayer(team, num){
+  const list = tempActive[team];
+
+  if(list.includes(num)){
+    tempActive[team] = list.filter(n => n !== num);
+  } else {
+    if(tempActive[team].length >= 5){
+      alert("Maximal 5 Spieler gleichzeitig.");
+      return;
+    }
+    tempActive[team].push(num);
+  }
+
+  updateTeamStatus(team);
+  render();
+}
+
+function updateTeamStatus(team){
+  const pts = tempActive[team]
+    .map(n => players.find(p => p.num === n && p.team === team)?.pts || 0)
+    .reduce((a,b) => a+b, 0);
+
+  const box = document.getElementById(team + "Team");
+
+  if(pts > 14.5){
+    box.classList.add("fail");
+    box.classList.remove("ok");
+  } else {
+    box.classList.add("ok");
+    box.classList.remove("fail");
+  }
+
+  document.getElementById(team + "Status").textContent =
+    `Total: ${pts.toFixed(1)} / 14.5`;
 }
 
 function removePlayer(num, team){
@@ -132,6 +192,26 @@ function nextQuarter(){
   endQuarterBtn.classList.remove("hidden");
 
   saveState();
+}
+
+function confirmChange(team){
+  active[team] = [...tempActive[team]];
+
+  log.push({
+    time: new Date().toLocaleTimeString(),
+    period,
+    team,
+    lineup: active[team]
+  });
+
+  saveState();
+  render();
+}
+
+function undoChange(team){
+  tempActive[team] = [...active[team]];
+  updateTeamStatus(team);
+  render();
 }
 
 function adminReset(){
