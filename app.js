@@ -1,11 +1,12 @@
 /* ============================================================
-   RBB SCORES – stabile Version (Basis repariert)
+   RBB SCORES – Optimierte Version (Option A + Option 2)
+   UX-verbessert, kompatibel zur neuen index.html
    ============================================================ */
 
 let players = [];
-let active = { heim: [], gast: [] };
-let tempActive = { heim: [], gast: [] };
-let log = [];
+let active = { heim: [], gast: [] };       // tatsächliche Lineups pro Quarter
+let tempActive = { heim: [], gast: [] };   // UI-Auswahl
+let log = [];                              // History-Einträge
 let period = "Q1";
 let gameRunning = false;
 
@@ -118,7 +119,7 @@ function addPlayer() {
   const p = parseFloat(pts.value);
   const t = teamSelect.value;
 
-  // Nummer 0 erlauben
+  // FIX: Nummer 0 erlauben
   if (isNaN(n) || isNaN(p)) {
     alert("Bitte Nummer und Punkte auswählen.");
     return;
@@ -156,6 +157,10 @@ function render() {
   const optGast = document.querySelector('#teamSelect option[value="gast"]');
   if (optHeim) optHeim.textContent = nameHeim.value || "Home";
   if (optGast) optGast.textContent = nameGast.value || "Guest";
+
+  // Pulse Animation
+  teamSelect.classList.add("pulse");
+  setTimeout(() => teamSelect.classList.remove("pulse"), 300);
 
   renderList("heim", "heimPlayersSetup", true);
   renderList("gast", "gastPlayersSetup", true);
@@ -364,4 +369,138 @@ function nextQuarter() {
 
   gameStatus.innerHTML = `<strong>Game Running - ${period}</strong>`;
   nextQuarterBtn.classList.add("hidden");
-  endQuarterBtn.classList.remove("hidden
+  endQuarterBtn.classList.remove("hidden");
+
+  saveState();
+  updateTimeline();
+}
+
+/* ------------------------------------------------------------
+   End Game → History View (Option 2)
+------------------------------------------------------------ */
+function endGame() {
+  showHistory();
+}
+
+/* ------------------------------------------------------------
+   History anzeigen
+------------------------------------------------------------ */
+let historyView = null;
+
+function showHistory() {
+  if (!historyView) {
+    historyView = document.createElement("div");
+    historyView.id = "historyView";
+    historyView.style.marginTop = "65px";
+
+    historyView.innerHTML = `
+      <h3 style="text-align:center;">History</h3>
+
+      <table id="historyTable" style="width:100%;border-collapse:collapse;margin-top:20px;">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Period</th>
+            <th>Team</th>
+            <th>Players</th>
+            <th>Total Pts</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div style="text-align:center;margin-top:20px;">
+        <button onclick="backToGame()">⬅ Back to Game</button>
+      </div>
+
+      <div style="text-align:center;margin-top:10px;">
+        <button class="danger-btn" onclick="finishGame()">Neues Spiel starten</button>
+      </div>
+    `;
+
+    document.body.appendChild(historyView);
+  }
+
+  const tbody = document.querySelector("#historyTable tbody");
+  tbody.innerHTML = "";
+
+  let lastPeriod = null;
+
+  log.forEach(entry => {
+    if (entry.period !== lastPeriod) {
+      const sep = document.createElement("tr");
+      sep.style.background = "rgba(0,0,0,0.08)";
+      sep.style.fontWeight = "bold";
+      sep.style.textAlign = "center";
+      sep.innerHTML = `<td colspan="5">${entry.period}</td>`;
+      tbody.appendChild(sep);
+      lastPeriod = entry.period;
+    }
+
+    const totalPts = entry.lineup
+      .map(num => players.find(p => p.num === num && p.team === entry.team)?.pts || 0)
+      .reduce((a, b) => a + b, 0);
+
+    const tr = document.createElement("tr");
+    tr.style.background = entry.team === "heim"
+      ? "rgba(33,150,243,0.15)"
+      : "rgba(76,175,80,0.15)";
+
+    const teamName = entry.team === "heim" ? nameHeim.value : nameGast.value;
+
+    tr.innerHTML = `
+      <td>${entry.time}</td>
+      <td>${entry.period}</td>
+      <td>${teamName}</td>
+      <td>${entry.lineup.join(", ")}</td>
+      <td>${totalPts.toFixed(1)}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+
+  setupView.classList.add("hidden");
+  gameView.classList.add("hidden");
+  historyView.classList.remove("hidden");
+}
+
+/* ------------------------------------------------------------
+   Zurück zum Spiel
+------------------------------------------------------------ */
+function backToGame() {
+  historyView.classList.add("hidden");
+  gameView.classList.remove("hidden");
+}
+
+/* ------------------------------------------------------------
+   Neues Spiel starten (Option A – kompletter Reset)
+------------------------------------------------------------ */
+function finishGame() {
+  if (!confirm("Neues Spiel starten? Alle Daten werden gelöscht.")) return;
+
+  localStorage.removeItem("rbb_state");
+
+  players = [];
+  active = { heim: [], gast: [] };
+  tempActive = { heim: [], gast: [] };
+  log = [];
+  period = "Q1";
+  gameRunning = false;
+
+  nameHeim.value = "";
+  nameGast.value = "";
+
+  if (historyView) historyView.remove();
+  historyView = null;
+
+  gameView.classList.add("hidden");
+  setupView.classList.remove("hidden");
+
+  render();
+  updateTimeline();
+}
+
+/* ------------------------------------------------------------
+   Initial Load
+------------------------------------------------------------ */
+loadState();
