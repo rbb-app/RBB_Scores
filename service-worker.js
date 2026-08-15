@@ -8,14 +8,12 @@ const ASSETS = [
   "./icon.png"
 ];
 
-// Install: Cache all required files
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE).then(cache => cache.addAll(ASSETS))
   );
 });
 
-// Fetch: Serve from cache, fall back to network
 self.addEventListener("fetch", event => {
   event.respondWith(
     caches.match(event.request).then(response => {
@@ -24,15 +22,14 @@ self.addEventListener("fetch", event => {
   );
 });
 
-// Activate: Clean old caches when version changes
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
-        keys
-          .filter(key => key !== CACHE)
-          .map(key => caches.delete(key))
+        keys.filter(key => key !== CACHE).map(key => caches.delete(key))
       )
     )
+  );
+});
   );
 });
