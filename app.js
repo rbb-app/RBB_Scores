@@ -6,8 +6,28 @@ let period = "Q1";
 let gameRunning = false;
 let jb = false, fb = false;
 
+// DOM-Referenzen sauber definieren
 const jbBtn = document.getElementById("jbBtn");
 const fbBtn = document.getElementById("fbBtn");
+const num = document.getElementById("num");
+const pts = document.getElementById("pts");
+const teamSelect = document.getElementById("teamSelect");
+
+const nameHeim = document.getElementById("nameHeim");
+const nameGast = document.getElementById("nameGast");
+
+const heimTitle = document.getElementById("heimTitle");
+const gastTitle = document.getElementById("gastTitle");
+const heimTitleSetup = document.getElementById("heimTitleSetup");
+const gastTitleSetup = document.getElementById("gastTitleSetup");
+
+const setupView = document.getElementById("setupView");
+const gameView = document.getElementById("gameView");
+
+const gameStatus = document.getElementById("gameStatus");
+const realStartBtn = document.getElementById("realStartBtn");
+const endQuarterBtn = document.getElementById("endQuarterBtn");
+const nextQuarterBtn = document.getElementById("nextQuarterBtn");
 
 jbBtn.onclick = () => { jb = !jb; jbBtn.classList.toggle("active", jb); };
 fbBtn.onclick = () => { fb = !fb; fbBtn.classList.toggle("active", fb); };
@@ -22,7 +42,11 @@ function saveState(){
 
 function loadState(){
   const s = localStorage.getItem("rbb_state");
-  if(!s) return;
+  if(!s) {
+    render();
+    updateTimeline();
+    return;
+  }
   const data = JSON.parse(s);
 
   players = data.players || [];
@@ -36,6 +60,7 @@ function loadState(){
   nameGast.value = data.nameGast || "";
 
   render();
+  updateTimeline();
 }
 
 function calcPts(p){
@@ -77,17 +102,19 @@ function render(){
   heimTitleSetup.textContent = nameHeim.value || "Home";
   gastTitleSetup.textContent = nameGast.value || "Guest";
 
-  // ⭐ Dropdown dynamisch aktualisieren
+  // Dropdown dynamisch aktualisieren
   const optHeim = document.querySelector('#teamSelect option[value="heim"]');
   const optGast = document.querySelector('#teamSelect option[value="gast"]');
 
-  optHeim.textContent = nameHeim.value || "Home";
-  optGast.textContent = nameGast.value || "Guest";
+  if (optHeim) optHeim.textContent = nameHeim.value || "Home";
+  if (optGast) optGast.textContent = nameGast.value || "Guest";
 
-  // ⭐ Pulse Animation
+  // Pulse-Animation
   const sel = document.getElementById("teamSelect");
-  sel.classList.add("pulse");
-  setTimeout(() => sel.classList.remove("pulse"), 300);
+  if (sel) {
+    sel.classList.add("pulse");
+    setTimeout(() => sel.classList.remove("pulse"), 300);
+  }
 
   renderList("heim", "heimPlayersSetup", true);
   renderList("gast", "gastPlayersSetup", true);
@@ -102,6 +129,7 @@ function render(){
 
 function renderList(team, target, setup){
   const d = document.getElementById(target);
+  if (!d) return;
   d.innerHTML = "";
 
   const teamPlayers = players.filter(p => p.team === team);
@@ -158,11 +186,13 @@ function togglePlayer(team, num, index){
       }
 
       const box = document.getElementById(team + "Team");
-      box.style.transition = "background-color .3s ease";
-      box.style.backgroundColor = "rgba(255,0,0,0.3)";
-      setTimeout(() => {
-        box.style.backgroundColor = "";
-      }, 300);
+      if (box) {
+        box.style.transition = "background-color .3s ease";
+        box.style.backgroundColor = "rgba(255,0,0,0.3)";
+        setTimeout(() => {
+          box.style.backgroundColor = "";
+        }, 300);
+      }
 
       alert("Diese Aufstellung ist nicht möglich (14.5 Punkte überschritten).");
       return;
@@ -176,13 +206,16 @@ function togglePlayer(team, num, index){
 }
 
 function updateTeamStatus(team){
-  const pts = tempActive[team]
+  const ptsTotal = tempActive[team]
     .map(n => players.find(p => p.num === n && p.team === team)?.pts || 0)
     .reduce((a,b) => a+b, 0);
 
   const box = document.getElementById(team + "Team");
+  const statusEl = document.getElementById(team + "Status");
 
-  if(pts > 14.5){
+  if (!box || !statusEl) return;
+
+  if(ptsTotal > 14.5){
     box.classList.add("fail");
     box.classList.remove("ok");
   } else {
@@ -190,15 +223,15 @@ function updateTeamStatus(team){
     box.classList.remove("fail");
   }
 
-  document.getElementById(team + "Status").textContent =
-    `Total: ${pts.toFixed(1)} / 14.5`;
+  statusEl.textContent = `Total: ${ptsTotal.toFixed(1)} / 14.5`;
 }
 
 function updateTimeline(){
   const order = ["Q1","Q2","Q3","Q4","OT"];
   const currentIndex = order.indexOf(period);
 
-  document.querySelectorAll("#periodTimeline div").forEach((el, i) => {
+  const items = document.querySelectorAll("#periodTimeline div");
+  items.forEach((el, i) => {
     el.style.opacity = "1";
     el.style.fontWeight = "normal";
     el.style.background = "var(--card)";
@@ -273,4 +306,34 @@ function adminReset(){
 
   localStorage.removeItem("rbb_state");
 
-  game
+  gameRunning = false;
+  period = "Q1";
+  active = {heim:[], gast:[]};
+  tempActive = {heim:[], gast:[]};
+  log = [];
+
+  gameView.classList.add("hidden");
+  setupView.classList.remove("hidden");
+
+  render();
+  updateTimeline();
+}
+
+function endGame(){
+  if(!confirm("End game and download CSV?")) return;
+
+  let csv = "Time;Period;Team;Players\n";
+  log.forEach(l => {
+    csv += `${l.time};${l.period};${l.team};${l.lineup.join(",")}\n`;
+  });
+
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], {type:"text/csv"}));
+  a.download = "history.csv";
+  a.click();
+
+  localStorage.removeItem("rbb_state");
+  location.reload();
+}
+
+loadState();
