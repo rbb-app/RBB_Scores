@@ -15,7 +15,6 @@ let jb = false, fb = false;
 /* ------------------------------------------------------------
    DOM-Referenzen
 ------------------------------------------------------------ */
-// DOM-Referenzen
 const jbBtn = document.getElementById("jbBtn");
 const fbBtn = document.getElementById("fbBtn");
 const num = document.getElementById("num");
@@ -23,10 +22,6 @@ const pts = document.getElementById("pts");
 const teamSelect = document.getElementById("teamSelect");
 const nameHeim = document.getElementById("nameHeim");
 const nameGast = document.getElementById("nameGast");
-
-// Teamnamen dynamisch aktualisieren
-nameHeim.addEventListener("input", render);
-nameGast.addEventListener("input", render);
 
 const heimTitle = document.getElementById("heimTitle");
 const gastTitle = document.getElementById("gastTitle");
@@ -40,6 +35,12 @@ const realStartBtn = document.getElementById("realStartBtn");
 const endQuarterBtn = document.getElementById("endQuarterBtn");
 const nextQuarterBtn = document.getElementById("nextQuarterBtn");
 const gameStatus = document.getElementById("gameStatus");
+
+/* ------------------------------------------------------------
+   Teamnamen dynamisch aktualisieren
+------------------------------------------------------------ */
+nameHeim.addEventListener("input", render);
+nameGast.addEventListener("input", render);
 
 /* ------------------------------------------------------------
    Bonus-Buttons
@@ -118,6 +119,7 @@ function addPlayer() {
   const p = parseFloat(pts.value);
   const t = teamSelect.value;
 
+  // FIX: Nummer 0 erlauben
   if (isNaN(n) || isNaN(p)) {
     alert("Bitte Nummer und Punkte auswählen.");
     return;
@@ -150,7 +152,13 @@ function render() {
   heimTitleSetup.textContent = nameHeim.value || "Home";
   gastTitleSetup.textContent = nameGast.value || "Guest";
 
-  // Pulse Animation für TeamSelect
+  // Dropdown dynamisch aktualisieren
+  const optHeim = document.querySelector('#teamSelect option[value="heim"]');
+  const optGast = document.querySelector('#teamSelect option[value="gast"]');
+  if (optHeim) optHeim.textContent = nameHeim.value || "Home";
+  if (optGast) optGast.textContent = nameGast.value || "Guest";
+
+  // Pulse Animation
   teamSelect.classList.add("pulse");
   setTimeout(() => teamSelect.classList.remove("pulse"), 300);
 
