@@ -181,6 +181,35 @@ function updateTeamStatus(team){
   document.getElementById(team + "Status").textContent =
     `Total: ${pts.toFixed(1)} / 14.5`;
 }
+function updateTimeline(){
+  const order = ["Q1","Q2","Q3","Q4","OT"];
+  const currentIndex = order.indexOf(period);
+
+  document.querySelectorAll("#periodTimeline div").forEach((el, i) => {
+    el.style.opacity = "1";
+    el.style.fontWeight = "normal";
+    el.style.background = "var(--card)";
+    el.style.borderRadius = "10px";
+    el.style.padding = "6px 10px";
+
+    if(i < currentIndex){
+      // vergangene Perioden
+      el.style.background = "rgba(76,175,80,0.25)"; // leicht grün
+      el.style.fontWeight = "bold";
+    }
+
+    if(i === currentIndex){
+      // aktuelle Periode
+      el.style.background = "rgba(33,150,243,0.35)"; // leicht blau
+      el.style.fontWeight = "bold";
+    }
+
+    if(i > currentIndex){
+      // kommende Perioden
+      el.style.opacity = "0.5";
+    }
+  });
+}
 
 function removePlayer(num, team){
   players = players.filter(p => !(p.num === num && p.team === team));
@@ -200,6 +229,7 @@ function startRealGame(){
   realStartBtn.classList.add("hidden");
   endQuarterBtn.classList.remove("hidden");
   saveState();
+  updateTimeline();
 }
 
 function endQuarter(){
@@ -225,6 +255,7 @@ function nextQuarter(){
   endQuarterBtn.classList.remove("hidden");
 
   saveState();
+  updateTimeline();
 }
 
 function adminReset(){
@@ -242,6 +273,7 @@ function adminReset(){
   setupView.classList.remove("hidden");
 
   render();
+  updateTimeline();
 }
 
 function endGame(){
@@ -262,3 +294,7 @@ function endGame(){
 }
 
 loadState();
+updateTimeline();
+
+
+
