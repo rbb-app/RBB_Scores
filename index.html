@@ -229,6 +229,18 @@ Teamfarben:<br>
 Home Color <input type="color" id="heimColor" value="#4caf50"><br>
 Guest Color <input type="color" id="gastColor" value="#2196f3">
 </div>
+  
+<script>
+heimColor.addEventListener("input", () => {
+  saveState();
+  render();
+});
+
+gastColor.addEventListener("input", () => {
+  saveState();
+  render();
+});
+</script>
 
 <h3 style="text-align:center;">Add Player</h3>
 
