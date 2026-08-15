@@ -13,6 +13,7 @@
 <title>RBB Scores</title>
 
 <style>
+/* --- dein kompletter Style unverändert --- */
 :root{
   --bg:#f7f7f7;
   --fg:#111;
@@ -212,15 +213,6 @@ Home <input id="nameHeim" placeholder="Home"><br>
 Guest <input id="nameGast" placeholder="Guest">
 </div>
 
-<script>
-document.getElementById("nameHeim").addEventListener("focus", function(){
-  this.placeholder = "";
-});
-document.getElementById("nameGast").addEventListener("focus", function(){
-  this.placeholder = "";
-});
-</script>
-
 <h3 style="text-align:center;">Add Player</h3>
 
 <div style="text-align:center;margin-bottom:6px;">
@@ -279,5 +271,57 @@ Pts
   <div data-p="OT">OT</div>
 </div>
 
-
 <div style="text-align:center;margin-bottom:10px;">
+<div id="gameStatus"><strong>Game not started</strong></div>
+<button onclick="startRealGame()" id="realStartBtn">▶ Start Game</button>
+<button onclick="endQuarter()" id="endQuarterBtn" class="hidden">⏹ End Quarter</button>
+<button onclick="nextQuarter()" id="nextQuarterBtn" class="hidden">▶ Start Next Quarter</button>
+</div>
+
+<div class="container">
+<div class="team" id="heimTeam">
+<h3 id="heimTitle"></h3>
+<div id="heimPlayers" class="players"></div>
+<div id="heimStatus" class="status"></div>
+</div>
+
+<div class="team" id="gastTeam">
+<h3 id="gastTitle"></h3>
+<div id="gastPlayers" class="players"></div>
+<div id="gastStatus" class="status"></div>
+</div>
+</div>
+
+<div style="text-align:center;margin-top:15px">
+<button class="danger-btn" onclick="endGame()">⚠ End Game & Download CSV</button>
+</div>
+
+<div style="text-align:center;margin-top:10px">
+<button onclick="adminReset()">Admin Reset</button>
+</div>
+
+</div>
+
+<!-- ⭐ WICHTIG: Script GANZ AM ENDE -->
+<script>
+function checkInputs(){
+  const ids = ["jbBtn","fbBtn","num","pts","teamSelect","nameHeim","nameGast"];
+  const missing = ids.filter(id => !document.getElementById(id));
+
+  if(missing.length){
+    alert("Fehler: Folgende Elemente fehlen im HTML:\n" + missing.join(", "));
+  }
+}
+checkInputs();
+</script>
+
+<script src="app.js"></script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js');
+}
+</script>
+
+</body>
+</html>
