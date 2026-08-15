@@ -448,7 +448,6 @@ function showHistory() {
         <thead>
           <tr>
             <th>Time</th>
-            <th>Period</th>
             <th>Team</th>
             <th>Players</th>
             <th>Total Pts</th>
@@ -498,7 +497,6 @@ function showHistory() {
 
     tr.innerHTML = `
       <td>${entry.time}</td>
-      <td>${entry.period}</td>
       <td>${teamName}</td>
       <td>${entry.lineup.join(", ")}</td>
       <td>${totalPts.toFixed(1)}</td>
