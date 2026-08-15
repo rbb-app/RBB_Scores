@@ -7,13 +7,13 @@
 <meta name="theme-color" content="#121212">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.png">
+<link rel="preload" href="icon.png" as="image">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <title>RBB Scores</title>
 
 <style>
-/* --- dein kompletter Style unverändert --- */
 :root{
   --bg:#f7f7f7;
   --fg:#111;
@@ -22,6 +22,8 @@
   --ok:rgba(76,175,80,.18);
   --fail:rgba(244,67,54,.18);
   --danger:#d32f2f;
+  --accent:#4caf50;
+  --accent-dark:#388e3c;
 }
 
 @media(prefers-color-scheme:dark){
@@ -41,6 +43,11 @@ body{
   color:var(--fg);
 }
 
+h3{
+  margin:10px 0;
+  text-align:center;
+}
+
 button,input,select{
   font-size:16px;
   padding:10px 14px;
@@ -54,7 +61,17 @@ button:hover{
   transform:scale(1.03);
 }
 
+input:focus, select:focus, button:focus{
+  outline:3px solid var(--accent);
+}
+
 .hidden{display:none;}
+
+.center{text-align:center;}
+.mb-6{margin-bottom:6px;}
+.mb-10{margin-bottom:10px;}
+.mt-10{margin-top:10px;}
+.mt-15{margin-top:15px;}
 
 #setupView, #gameView {
   margin-top: 65px;
@@ -117,6 +134,11 @@ button:hover{
 
 .player.active{
   background:rgba(0,255,0,.25);
+  border-color:var(--accent);
+}
+
+.player:focus{
+  outline:3px solid var(--accent);
 }
 
 .remove{
@@ -147,9 +169,12 @@ button:hover{
   font-size:12px;
   opacity:.4;
   cursor:pointer;
-  transition:opacity .2s ease;
+  transition:opacity .2s ease, transform .2s ease;
 }
-.bonus-btn.active{opacity:1;}
+.bonus-btn.active{
+  opacity:1;
+  transform:scale(1.05);
+}
 .bonus-btn.jb{background:#3f51b5;color:#fff;}
 .bonus-btn.fb{background:#e91e63;color:#fff;}
 
@@ -170,9 +195,10 @@ button:hover{
 }
 
 .periods .active{
-  background:#4caf50;
+  background:var(--accent);
   color:#fff;
   transform:scale(1.05);
+  box-shadow:0 0 8px rgba(76,175,80,0.4);
 }
 
 .status{
@@ -196,7 +222,7 @@ button:hover{
   transform:scale(1.05);
 }
 
-/* ⭐ Pulse Animation */
+/* Pulse Animation */
 .pulse {
   animation: pulseAnim .3s ease;
 }
@@ -217,20 +243,20 @@ button:hover{
 <img src="icon.png" alt="RBB Scores">
 </div>
 
-<h3 style="text-align:center;">Setup</h3>
+<h3>Setup</h3>
 
-<div style="text-align:center">
-Home <input id="nameHeim" placeholder="Home"><br>
-Guest <input id="nameGast" placeholder="Guest">
+<div class="center mb-10">
+Home <input id="nameHeim" placeholder="Home" required><br><br>
+Guest <input id="nameGast" placeholder="Guest" required>
 </div>
 
-<h3 style="text-align:center;">Add Player</h3>
+<h3>Add Player</h3>
 
-<div style="text-align:center;margin-bottom:6px;">
-No <input id="num" type="number" style="width:60px;text-align:center;">
+<div class="center mb-10">
+No <input id="num" type="number" min="0" max="99" style="width:60px;text-align:center;" required>
 
 Pts 
-<select id="pts">
+<select id="pts" required>
 <option value="">--</option>
 <option value="1.0">1.0</option>
 <option value="1.5">1.5</option>
@@ -246,7 +272,7 @@ Pts
 <button id="fbBtn" class="bonus-btn fb">FB</button>
 </div>
 
-<div style="text-align:center;margin-bottom:8px;">
+<div class="center mb-10">
 <select id="teamSelect">
 <option value="heim">Home</option>
 <option value="gast">Guest</option>
@@ -266,7 +292,7 @@ Pts
 </div>
 </div>
 
-<div style="text-align:center;margin-top:10px">
+<div class="center mt-10">
 <button onclick="startGame()">Start Game View</button>
 </div>
 
@@ -282,8 +308,8 @@ Pts
   <div data-p="OT">OT</div>
 </div>
 
-<div style="text-align:center;margin-bottom:10px;">
-<div id="gameStatus"><strong>Game not started</strong></div>
+<div class="center mb-10">
+<div id="gameStatus" aria-live="polite"><strong>Game not started</strong></div>
 <button onclick="startRealGame()" id="realStartBtn">▶ Start Game</button>
 <button onclick="endQuarter()" id="endQuarterBtn" class="hidden">⏹ End Quarter</button>
 <button onclick="nextQuarter()" id="nextQuarterBtn" class="hidden">▶ Start Next Quarter</button>
@@ -303,17 +329,16 @@ Pts
 </div>
 </div>
 
-<div style="text-align:center;margin-top:15px">
+<div class="center mt-15">
 <button class="danger-btn" onclick="endGame()">⚠ End Game & Download CSV</button>
 </div>
 
-<div style="text-align:center;margin-top:10px">
+<div class="center mt-10">
 <button onclick="adminReset()">Admin Reset</button>
 </div>
 
 </div>
 
-<!-- ⭐ WICHTIG: Script GANZ AM ENDE -->
 <script>
 function checkInputs(){
   const ids = ["jbBtn","fbBtn","num","pts","teamSelect","nameHeim","nameGast"];
@@ -330,7 +355,8 @@ checkInputs();
 
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('service-worker.js');
+  navigator.serviceWorker.register('service-worker.js')
+    .catch(err => console.error("SW registration failed", err));
 }
 </script>
 
