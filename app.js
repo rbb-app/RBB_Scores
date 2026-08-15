@@ -38,8 +38,8 @@ function loadState(){
   period = data.period || "Q1";
   gameRunning = data.gameRunning || false;
 
-  nameHeim.value = data.nameHeim || "Home";
-  nameGast.value = data.nameGast || "Guest";
+  nameHeim.value = data.nameHeim || "";
+  nameGast.value = data.nameGast || "";
 
   heimColor.value = data.heimColor || "#4caf50";
   gastColor.value = data.gastColor || "#2196f3";
