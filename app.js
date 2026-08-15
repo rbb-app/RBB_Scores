@@ -15,6 +15,7 @@ let jb = false, fb = false;
 /* ------------------------------------------------------------
    DOM-Referenzen
 ------------------------------------------------------------ */
+// DOM-Referenzen
 const jbBtn = document.getElementById("jbBtn");
 const fbBtn = document.getElementById("fbBtn");
 const num = document.getElementById("num");
@@ -22,6 +23,10 @@ const pts = document.getElementById("pts");
 const teamSelect = document.getElementById("teamSelect");
 const nameHeim = document.getElementById("nameHeim");
 const nameGast = document.getElementById("nameGast");
+
+// Teamnamen dynamisch aktualisieren
+nameHeim.addEventListener("input", render);
+nameGast.addEventListener("input", render);
 
 const heimTitle = document.getElementById("heimTitle");
 const gastTitle = document.getElementById("gastTitle");
@@ -113,7 +118,7 @@ function addPlayer() {
   const p = parseFloat(pts.value);
   const t = teamSelect.value;
 
-  if (!n || isNaN(p)) {
+  if (isNaN(n) || isNaN(p)) {
     alert("Bitte Nummer und Punkte auswählen.");
     return;
   }
