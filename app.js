@@ -88,7 +88,6 @@ function addPlayer(){
   }
 
   players.push({num:n, pts:calcPts(p), team:t, jb, fb});
-
   players.sort((a, b) => a.num - b.num);
 
   num.value = "";
@@ -180,7 +179,6 @@ function togglePlayer(team, num, index){
       .reduce((a,b) => a+b, 0);
 
     if(ptsAfter > 14.5){
-
       const playerEl = document.querySelector(`#${team}Players .player:nth-child(${index+1})`);
       if(playerEl){
         playerEl.style.transition = "background-color .3s ease";
@@ -275,4 +273,107 @@ function startRealGame(){
   gameRunning = true;
   gameStatus.innerHTML = `<strong>Game Running - ${period}</strong>`;
   realStartBtn.classList.add("hidden");
- 
+  endQuarterBtn.classList.remove("hidden");
+  saveState();
+  updateTimeline();
+}
+
+function endQuarter(){
+  gameRunning = false;
+  gameStatus.innerHTML = `<strong>${period} ended</strong>`;
+  endQuarterBtn.classList.add("hidden");
+  nextQuarterBtn.classList.remove("hidden");
+  saveState();
+}
+
+function nextQuarter(){
+  const order = ["Q1","Q2","Q3","Q4","OT"];
+  let i = order.indexOf(period);
+  if(i < order.length - 1) period = order[i+1];
+
+  document.querySelectorAll(".periods div").forEach(d => {
+    d.classList.toggle("active", d.dataset.p === period);
+  });
+
+  gameRunning = true;
+  gameStatus.innerHTML = `<strong>Game Running - ${period}</strong>`;
+  nextQuarterBtn.classList.add("hidden");
+  endQuarterBtn.classList.remove("hidden");
+
+  saveState();
+  updateTimeline();
+}
+
+function adminReset(){
+  if(!confirm("Return to setup without deleting players?")) return;
+
+  localStorage.removeItem("rbb_state");
+
+  gameRunning = false;
+  period = "Q1";
+  active = {heim:[], gast:[]};
+  tempActive = {heim:[], gast:[]};
+  log = [];
+
+  gameView.classList.add("hidden");
+  setupView.classList.remove("hidden");
+
+  render();
+  updateTimeline();
+}
+
+/* ——— HISTORY ——— */
+function showHistory(){
+  const tbody = document.querySelector("#historyTable tbody");
+  tbody.innerHTML = "";
+
+  let lastPeriod = null;
+
+  log.forEach(entry => {
+
+    // Perioden-Trennlinie
+    if(entry.period !== lastPeriod){
+      const sep = document.createElement("tr");
+      sep.className = "periodRow";
+      sep.innerHTML = `<td colspan="5">${entry.period}</td>`;
+      tbody.appendChild(sep);
+      lastPeriod = entry.period;
+    }
+
+    const totalPts = entry.lineup
+      .map(num => players.find(p => p.num === num && p.team === entry.team)?.pts || 0)
+      .reduce((a,b) => a+b, 0);
+
+    const tr = document.createElement("tr");
+    tr.className = entry.team === "heim" ? "heimRow" : "gastRow";
+
+    const teamName = entry.team === "heim" ? nameHeim.value : nameGast.value;
+
+    tr.innerHTML = `
+      <td>${entry.time}</td>
+      <td>${entry.period}</td>
+      <td>${teamName}</td>
+      <td>${entry.lineup.join(", ")}</td>
+      <td>${totalPts.toFixed(1)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  gameView.classList.add("hidden");
+  historyView.classList.remove("hidden");
+}
+
+function backToGame(){
+  historyView.classList.add("hidden");
+  gameView.classList.remove("hidden");
+}
+
+function finishGame(){
+  if(!confirm("Spiel wirklich abschließen?")) return;
+
+  localStorage.removeItem("rbb_state");
+  alert("Spiel wurde abgeschlossen.");
+  location.reload();
+}
+
+loadState();
