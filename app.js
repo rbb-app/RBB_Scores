@@ -545,6 +545,53 @@ function finishGame() {
   render();
   updateTimeline();
 }
+function adminReset() {
+  const confirmReset = confirm(
+    "Admin Reset:\n\nDas Spiel wird zurückgesetzt.\nDie Spieler und Teamnamen bleiben erhalten.\n\nMöchtest du fortfahren?"
+  );
+
+  if (!confirmReset) return;
+
+  // History löschen
+  log = [];
+
+  // Spielstatus zurücksetzen
+  gameRunning = false;
+  period = "Q1";
+
+  // aktive Aufstellungen löschen
+  active = { heim: [], gast: [] };
+  tempActive = { heim: [], gast: [] };
+
+  // Confirm-Buttons ausblenden
+  confirmHeimBtn.classList.add("hidden");
+  confirmGastBtn.classList.add("hidden");
+
+  // HistoryView entfernen, falls offen
+  if (historyView) {
+    historyView.remove();
+    historyView = null;
+  }
+
+  // Setup-Ansicht wieder anzeigen
+  gameView.classList.add("hidden");
+  setupView.classList.remove("hidden");
+
+  // Statusanzeige zurücksetzen
+  gameStatus.innerHTML = `<strong>Game not started</strong>`;
+  realStartBtn.classList.remove("hidden");
+  endQuarterBtn.classList.add("hidden");
+  nextQuarterBtn.classList.add("hidden");
+
+  // UI neu rendern
+  render();
+
+  // Timeline zurücksetzen
+  updateTimeline();
+
+  // State speichern
+  saveState();
+}
 
 /* ------------------------------------------------------------
    Initial Load
