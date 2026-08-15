@@ -1,0 +1,171 @@
+let players = [];
+let active = {heim:[], gast:[]};
+let tempActive = {heim:[], gast:[]};
+let log = [];
+let period = "Q1";
+let gameRunning = false;
+let jb = false, fb = false;
+
+const jbBtn = document.getElementById("jbBtn");
+const fbBtn = document.getElementById("fbBtn");
+
+jbBtn.onclick = () => { jb = !jb; jbBtn.classList.toggle("active", jb); };
+fbBtn.onclick = () => { fb = !fb; fbBtn.classList.toggle("active", fb); };
+
+function saveState(){
+  localStorage.setItem("rbb_state", JSON.stringify({
+    players, active, tempActive, log, period, gameRunning,
+    nameHeim: nameHeim.value,
+    nameGast: nameGast.value
+  }));
+}
+
+function loadState(){
+  const s = localStorage.getItem("rbb_state");
+  if(!s) return;
+  const data = JSON.parse(s);
+
+  players = data.players || [];
+  active = data.active || {heim:[], gast:[]};
+  tempActive = data.tempActive || {heim:[], gast:[]};
+  log = data.log || [];
+  period = data.period || "Q1";
+  gameRunning = data.gameRunning || false;
+
+  nameHeim.value = data.nameHeim || "Home";
+  nameGast.value = data.nameGast || "Guest";
+
+  render();
+}
+
+function calcPts(p){
+  if(jb && fb) return p - 2;
+  if(jb) return p - 1;
+  if(fb) return p - 1.5;
+  return p;
+}
+
+function addPlayer(){
+  const n = +num.value;
+  const p = parseFloat(pts.value);
+  const t = teamSelect.value;
+  if(!n || isNaN(p)) return;
+
+  players.push({num:n, pts:calcPts(p), team:t, jb, fb});
+  num.value = ""; pts.value = "";
+  jb = fb = false;
+  jbBtn.classList.remove("active");
+  fbBtn.classList.remove("active");
+
+  render();
+  saveState();
+}
+
+function render(){
+  heimTitle.textContent = nameHeim.value;
+  gastTitle.textContent = nameGast.value;
+  heimTitleSetup.textContent = nameHeim.value;
+  gastTitleSetup.textContent = nameGast.value;
+
+  renderList("heim", "heimPlayersSetup", true);
+  renderList("gast", "gastPlayersSetup", true);
+  renderList("heim", "heimPlayers", false);
+  renderList("gast", "gastPlayers", false);
+
+  saveState();
+}
+
+function renderList(team, target, setup){
+  const d = document.getElementById(target);
+  d.innerHTML = "";
+  players.filter(p => p.team === team).forEach(p => {
+    const e = document.createElement("div");
+    e.className = "player";
+    e.innerHTML = `#${p.num}<br>${p.pts.toFixed(1)}`;
+    if(p.fb) e.innerHTML += `<div class="bonus fb">FB</div>`;
+    if(p.jb) e.innerHTML += `<div class="bonus jb">JB</div>`;
+    if(setup) e.innerHTML += `<div class="remove" onclick="removePlayer(${p.num}, '${p.team}')">×</div>`;
+    d.appendChild(e);
+  });
+}
+
+function removePlayer(num, team){
+  players = players.filter(p => !(p.num === num && p.team === team));
+  render();
+  saveState();
+}
+
+function startGame(){
+  setupView.classList.add("hidden");
+  gameView.classList.remove("hidden");
+  saveState();
+}
+
+function startRealGame(){
+  gameRunning = true;
+  gameStatus.innerHTML = `<strong>Game Running - ${period}</strong>`;
+  realStartBtn.classList.add("hidden");
+  endQuarterBtn.classList.remove("hidden");
+  saveState();
+}
+
+function endQuarter(){
+  gameRunning = false;
+  gameStatus.innerHTML = `<strong>${period} ended</strong>`;
+  endQuarterBtn.classList.add("hidden");
+  nextQuarterBtn.classList.remove("hidden");
+  saveState();
+}
+
+function nextQuarter(){
+  const order = ["Q1","Q2","Q3","Q4","OT"];
+  let i = order.indexOf(period);
+  if(i < order.length - 1) period = order[i+1];
+
+  document.querySelectorAll(".periods div").forEach(d => {
+    d.classList.toggle("active", d.dataset.p === period);
+  });
+
+  gameRunning = true;
+  gameStatus.innerHTML = `<strong>Game Running - ${period}</strong>`;
+  nextQuarterBtn.classList.add("hidden");
+  endQuarterBtn.classList.remove("hidden");
+
+  saveState();
+}
+
+function adminReset(){
+  if(!confirm("Return to setup without deleting players?")) return;
+
+  localStorage.removeItem("rbb_state");
+
+  gameRunning = false;
+  period = "Q1";
+  active = {heim:[], gast:[]};
+  tempActive = {heim:[], gast:[]};
+  log = [];
+
+  gameView.classList.add("hidden");
+  setupView.classList.remove("hidden");
+
+  render();
+}
+
+function endGame(){
+  if(!confirm("End game and download CSV?")) return;
+
+  let csv = "Time;Period;Team;Players\n";
+  log.forEach(l => {
+    csv += `${l.time};${l.period};${l.team};${l.lineup.join(",")}\n`;
+  });
+
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], {type:"text/csv"}));
+  a.download = "history.csv";
+  a.click();
+
+  localStorage.removeItem("rbb_state");
+  location.reload();
+}
+
+loadState();
