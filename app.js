@@ -6,7 +6,7 @@ let period = "Q1";
 let gameRunning = false;
 let jb = false, fb = false;
 
-// DOM-Referenzen sauber definieren
+// DOM-Referenzen
 const jbBtn = document.getElementById("jbBtn");
 const fbBtn = document.getElementById("fbBtn");
 const num = document.getElementById("num");
@@ -23,20 +23,16 @@ const gastTitleSetup = document.getElementById("gastTitleSetup");
 
 const setupView = document.getElementById("setupView");
 const gameView = document.getElementById("gameView");
+const historyView = document.getElementById("historyView");
 
 const gameStatus = document.getElementById("gameStatus");
 const realStartBtn = document.getElementById("realStartBtn");
 const endQuarterBtn = document.getElementById("endQuarterBtn");
 const nextQuarterBtn = document.getElementById("nextQuarterBtn");
 
-nameHeim.addEventListener("input", () => {
-  render();
-});
-
-nameGast.addEventListener("input", () => {
-  render();
-});
-
+// Live update names
+nameHeim.addEventListener("input", render);
+nameGast.addEventListener("input", render);
 
 jbBtn.onclick = () => { jb = !jb; jbBtn.classList.toggle("active", jb); };
 fbBtn.onclick = () => { fb = !fb; fbBtn.classList.toggle("active", fb); };
@@ -118,7 +114,7 @@ function render(){
   if (optHeim) optHeim.textContent = nameHeim.value || "Home";
   if (optGast) optGast.textContent = nameGast.value || "Guest";
 
-  // Pulse-Animation
+  // Pulse Animation
   const sel = document.getElementById("teamSelect");
   if (sel) {
     sel.classList.add("pulse");
@@ -279,70 +275,4 @@ function startRealGame(){
   gameRunning = true;
   gameStatus.innerHTML = `<strong>Game Running - ${period}</strong>`;
   realStartBtn.classList.add("hidden");
-  endQuarterBtn.classList.remove("hidden");
-  saveState();
-  updateTimeline();
-}
-
-function endQuarter(){
-  gameRunning = false;
-  gameStatus.innerHTML = `<strong>${period} ended</strong>`;
-  endQuarterBtn.classList.add("hidden");
-  nextQuarterBtn.classList.remove("hidden");
-  saveState();
-}
-
-function nextQuarter(){
-  const order = ["Q1","Q2","Q3","Q4","OT"];
-  let i = order.indexOf(period);
-  if(i < order.length - 1) period = order[i+1];
-
-  document.querySelectorAll(".periods div").forEach(d => {
-    d.classList.toggle("active", d.dataset.p === period);
-  });
-
-  gameRunning = true;
-  gameStatus.innerHTML = `<strong>Game Running - ${period}</strong>`;
-  nextQuarterBtn.classList.add("hidden");
-  endQuarterBtn.classList.remove("hidden");
-
-  saveState();
-  updateTimeline();
-}
-
-function adminReset(){
-  if(!confirm("Return to setup without deleting players?")) return;
-
-  localStorage.removeItem("rbb_state");
-
-  gameRunning = false;
-  period = "Q1";
-  active = {heim:[], gast:[]};
-  tempActive = {heim:[], gast:[]};
-  log = [];
-
-  gameView.classList.add("hidden");
-  setupView.classList.remove("hidden");
-
-  render();
-  updateTimeline();
-}
-
-function endGame(){
-  if(!confirm("End game and download CSV?")) return;
-
-  let csv = "Time;Period;Team;Players\n";
-  log.forEach(l => {
-    csv += `${l.time};${l.period};${l.team};${l.lineup.join(",")}\n`;
-  });
-
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv], {type:"text/csv"}));
-  a.download = "history.csv";
-  a.click();
-
-  localStorage.removeItem("rbb_state");
-  location.reload();
-}
-
-loadState();
+ 
