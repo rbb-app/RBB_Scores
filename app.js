@@ -92,13 +92,12 @@ function renderList(team, target, setup){
   const d = document.getElementById(target);
   d.innerHTML = "";
 
-  players.filter(p => p.team === team).forEach(p => {
+  players.filter(p => p.team === team).forEach((p, index) => {
     const e = document.createElement("div");
     e.className = "player";
 
     if(!setup){
-      e.onclick = () => togglePlayer(team, p.num);
-
+      e.onclick = () => togglePlayer(team, p.num, index);
       if(tempActive[team].includes(p.num)){
         e.classList.add("active");
       }
@@ -117,7 +116,7 @@ function renderList(team, target, setup){
   });
 }
 
-function togglePlayer(team, num){
+function togglePlayer(team, num, index){
   const list = tempActive[team];
 
   if(list.includes(num)){
@@ -127,6 +126,34 @@ function togglePlayer(team, num){
       alert("Maximal 5 Spieler gleichzeitig.");
       return;
     }
+
+    const ptsAfter = tempActive[team]
+      .concat([num])
+      .map(n => players.find(p => p.num === n && p.team === team)?.pts || 0)
+      .reduce((a,b) => a+b, 0);
+
+    if(ptsAfter > 14.5){
+
+      const playerEl = document.querySelector(`#${team}Players .player:nth-child(${index+1})`);
+      if(playerEl){
+        playerEl.style.transition = "background-color .3s ease";
+        playerEl.style.backgroundColor = "rgba(255,0,0,0.6)";
+        setTimeout(() => {
+          playerEl.style.backgroundColor = "";
+        }, 300);
+      }
+
+      const box = document.getElementById(team + "Team");
+      box.style.transition = "background-color .3s ease";
+      box.style.backgroundColor = "rgba(255,0,0,0.3)";
+      setTimeout(() => {
+        box.style.backgroundColor = "";
+      }, 300);
+
+      alert("Diese Aufstellung ist nicht möglich (14.5 Punkte überschritten).");
+      return;
+    }
+
     tempActive[team].push(num);
   }
 
@@ -196,26 +223,6 @@ function nextQuarter(){
   endQuarterBtn.classList.remove("hidden");
 
   saveState();
-}
-
-function confirmChange(team){
-  active[team] = [...tempActive[team]];
-
-  log.push({
-    time: new Date().toLocaleTimeString(),
-    period,
-    team,
-    lineup: active[team]
-  });
-
-  saveState();
-  render();
-}
-
-function undoChange(team){
-  tempActive[team] = [...active[team]];
-  updateTeamStatus(team);
-  render();
 }
 
 function adminReset(){
