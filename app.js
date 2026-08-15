@@ -77,6 +77,18 @@ function render(){
   heimTitleSetup.textContent = nameHeim.value || "Home";
   gastTitleSetup.textContent = nameGast.value || "Guest";
 
+  // ⭐ Dropdown dynamisch aktualisieren
+  const optHeim = document.querySelector('#teamSelect option[value="heim"]');
+  const optGast = document.querySelector('#teamSelect option[value="gast"]');
+
+  optHeim.textContent = nameHeim.value || "Home";
+  optGast.textContent = nameGast.value || "Guest";
+
+  // ⭐ Pulse Animation
+  const sel = document.getElementById("teamSelect");
+  sel.classList.add("pulse");
+  setTimeout(() => sel.classList.remove("pulse"), 300);
+
   renderList("heim", "heimPlayersSetup", true);
   renderList("gast", "gastPlayersSetup", true);
   renderList("heim", "heimPlayers", false);
@@ -181,6 +193,7 @@ function updateTeamStatus(team){
   document.getElementById(team + "Status").textContent =
     `Total: ${pts.toFixed(1)} / 14.5`;
 }
+
 function updateTimeline(){
   const order = ["Q1","Q2","Q3","Q4","OT"];
   const currentIndex = order.indexOf(period);
@@ -193,19 +206,16 @@ function updateTimeline(){
     el.style.padding = "6px 10px";
 
     if(i < currentIndex){
-      // vergangene Perioden
-      el.style.background = "rgba(76,175,80,0.25)"; // leicht grün
+      el.style.background = "rgba(76,175,80,0.25)";
       el.style.fontWeight = "bold";
     }
 
     if(i === currentIndex){
-      // aktuelle Periode
-      el.style.background = "rgba(33,150,243,0.35)"; // leicht blau
+      el.style.background = "rgba(33,150,243,0.35)";
       el.style.fontWeight = "bold";
     }
 
     if(i > currentIndex){
-      // kommende Perioden
       el.style.opacity = "0.5";
     }
   });
@@ -263,38 +273,4 @@ function adminReset(){
 
   localStorage.removeItem("rbb_state");
 
-  gameRunning = false;
-  period = "Q1";
-  active = {heim:[], gast:[]};
-  tempActive = {heim:[], gast:[]};
-  log = [];
-
-  gameView.classList.add("hidden");
-  setupView.classList.remove("hidden");
-
-  render();
-  updateTimeline();
-}
-
-function endGame(){
-  if(!confirm("End game and download CSV?")) return;
-
-  let csv = "Time;Period;Team;Players\n";
-  log.forEach(l => {
-    csv += `${l.time};${l.period};${l.team};${l.lineup.join(",")}\n`;
-  });
-
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv], {type:"text/csv"}));
-  a.download = "history.csv";
-  a.click();
-
-  localStorage.removeItem("rbb_state");
-  location.reload();
-}
-
-loadState();
-updateTimeline();
-
-
-
+  game
