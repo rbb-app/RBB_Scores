@@ -29,6 +29,15 @@ const realStartBtn = document.getElementById("realStartBtn");
 const endQuarterBtn = document.getElementById("endQuarterBtn");
 const nextQuarterBtn = document.getElementById("nextQuarterBtn");
 
+nameHeim.addEventListener("input", () => {
+  render();
+});
+
+nameGast.addEventListener("input", () => {
+  render();
+});
+
+
 jbBtn.onclick = () => { jb = !jb; jbBtn.classList.toggle("active", jb); };
 fbBtn.onclick = () => { fb = !fb; fbBtn.classList.toggle("active", fb); };
 
