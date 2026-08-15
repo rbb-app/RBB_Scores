@@ -92,7 +92,9 @@ function renderList(team, target, setup){
   const d = document.getElementById(target);
   d.innerHTML = "";
 
-  players.filter(p => p.team === team).forEach((p, index) => {
+  const teamPlayers = players.filter(p => p.team === team);
+
+  teamPlayers.forEach((p, index) => {
     const e = document.createElement("div");
     e.className = "player";
 
